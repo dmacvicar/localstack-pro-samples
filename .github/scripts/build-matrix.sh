@@ -19,6 +19,7 @@ INFRA_FILES=(
 # Only includes verified working samples
 declare -A WATCH_FOLDERS
 WATCH_FOLDERS["lambda-function-urls-python"]="lambda-function-urls-python"
+WATCH_FOLDERS["lambda-function-urls-javascript"]="lambda-function-urls-javascript"
 WATCH_FOLDERS["stepfunctions-lambda"]="stepfunctions-lambda"
 
 usage() {

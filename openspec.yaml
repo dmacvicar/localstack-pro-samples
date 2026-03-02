@@ -59,6 +59,12 @@ samples:
     services: [lambda]
     command: make install && make run
 
+  - name: lambda-function-urls-javascript
+    path: lambda-function-urls-javascript
+    status: passing
+    services: [lambda]
+    command: make install && make run
+
   - name: stepfunctions-lambda
     path: stepfunctions-lambda
     status: passing

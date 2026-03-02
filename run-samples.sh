@@ -14,6 +14,7 @@ export PATH="$SCRIPT_DIR/bin:$PATH"
 # Only samples that are verified working with current license
 SAMPLES=(
   "lambda-function-urls-python|make install && make run"
+  "lambda-function-urls-javascript|make install && make run"
   "stepfunctions-lambda|make install && make create-lambdas"
 )
 
