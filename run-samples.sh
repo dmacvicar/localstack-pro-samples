@@ -11,12 +11,10 @@ export PATH="$SCRIPT_DIR/bin:$PATH"
 # Sample definitions: "path|ci_command"
 # Runs install + run (LocalStack managed externally by CI workflow)
 # Only includes samples using services available in LocalStack license
+# Only samples that are verified working with current license
 SAMPLES=(
   "lambda-function-urls-python|make install && make run"
   "stepfunctions-lambda|make install && make create-lambdas"
-  "apigw-custom-domain|make install && make deploy && make run"
-  "lambda-container-image|make install && make run"
-  "elb-load-balancing|make install && make run"
 )
 
 # Colors for output

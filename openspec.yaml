@@ -189,8 +189,8 @@ roadmap:
       - "[x] Test terraform-resources sample - BLOCKED (elasticache, rds not in license)"
       - "[x] Test lambda-container-image sample - BLOCKED (ecr not in license)"
       - "[x] Test elb-load-balancing sample - PARTIAL (deploys but invocation fails)"
-      - "[ ] Add cdklocal and tflocal wrappers to bin/"
-      - "[ ] Test with act locally before GitHub"
+      - "[x] Add cdklocal and tflocal wrappers to bin/"
+      - "[x] Test with act locally - build-matrix job works"
       - "[ ] Find more samples using only available services"
       - "[ ] Add .gitignore for sample build artifacts"
 

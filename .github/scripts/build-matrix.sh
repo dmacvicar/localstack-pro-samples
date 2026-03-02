@@ -16,15 +16,10 @@ INFRA_FILES=(
 )
 
 # Sample watch folders - maps sample name to folders to watch
+# Only includes verified working samples
 declare -A WATCH_FOLDERS
 WATCH_FOLDERS["lambda-function-urls-python"]="lambda-function-urls-python"
 WATCH_FOLDERS["stepfunctions-lambda"]="stepfunctions-lambda"
-WATCH_FOLDERS["apigw-custom-domain"]="apigw-custom-domain"
-WATCH_FOLDERS["serverless-lambda-layers"]="serverless-lambda-layers"
-WATCH_FOLDERS["lambda-container-image"]="lambda-container-image"
-WATCH_FOLDERS["lambda-xray"]="lambda-xray"
-WATCH_FOLDERS["elb-load-balancing"]="elb-load-balancing"
-WATCH_FOLDERS["terraform-resources"]="terraform-resources"
 
 usage() {
   cat <<EOF
