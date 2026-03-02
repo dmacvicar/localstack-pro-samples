@@ -163,7 +163,79 @@ infrastructure_files:
   - .github/workflows/run-samples.yml
   - .github/scripts/build-matrix.sh
 
+roadmap:
+  phase1:
+    name: "Foundation (Current)"
+    status: complete
+    tasks:
+      - "[x] Create run-samples.sh orchestrator"
+      - "[x] Create GitHub Actions workflow"
+      - "[x] Create dynamic matrix builder"
+      - "[x] Create awslocal wrapper using uvx"
+      - "[x] Verify lambda-function-urls-python sample"
+      - "[x] Verify stepfunctions-lambda sample"
+      - "[x] Create openspec.yaml for tracking"
+
+  phase2:
+    name: "Expand Coverage"
+    status: in_progress
+    tasks:
+      - "[ ] Test apigw-custom-domain sample"
+      - "[ ] Test terraform-resources sample"
+      - "[ ] Test lambda-container-image sample"
+      - "[ ] Test elb-load-balancing sample"
+      - "[ ] Test serverless-lambda-layers sample"
+      - "[ ] Add .gitignore for sample build artifacts"
+      - "[ ] Standardize Makefile targets across samples"
+
+  phase3:
+    name: "Fix Broken Samples"
+    status: pending
+    tasks:
+      - "[ ] Fix samples with missing Makefile targets"
+      - "[ ] Update samples with deprecated dependencies"
+      - "[ ] Add test validation scripts where missing"
+      - "[ ] Document fixes for upstream PR"
+
+  phase4:
+    name: "Production Ready"
+    status: pending
+    tasks:
+      - "[ ] Enable CI on GitHub (requires secrets)"
+      - "[ ] Add nightly full test run schedule"
+      - "[ ] Add coverage badge generation"
+      - "[ ] PR workflow improvements to upstream"
+      - "[ ] Add Slack/email notifications for failures"
+
+next_actions:
+  - priority: high
+    action: "Test remaining samples with available services"
+    samples:
+      - apigw-custom-domain
+      - terraform-resources
+      - lambda-container-image
+      - elb-load-balancing
+
+  - priority: medium
+    action: "Add cdklocal and tflocal wrappers to bin/"
+    reason: "CDK and Terraform samples need these tools"
+
+  - priority: medium
+    action: "Create sample-specific .gitignore entries"
+    reason: "Prevent committing build artifacts like .venv, node_modules, *.zip"
+
+  - priority: low
+    action: "Add test result reporting"
+    reason: "Generate JUnit XML for GitHub Actions test summary"
+
 changelog:
+  - version: "0.2.0"
+    date: "2026-03-02"
+    changes:
+      - "Added roadmap and next_actions sections"
+      - "Defined 4-phase implementation plan"
+      - "Prioritized next actions"
+
   - version: "0.1.0"
     date: "2026-03-02"
     changes:
