@@ -1,36 +1,54 @@
 ## Why
 
-The `localstack-aws-samples` repository was restructured to match the `localstack-azure-samples` convention. The old `localstack-pro-samples` contained many useful samples that need to be ported to the new structure to provide comprehensive AWS service examples for LocalStack users.
+Port samples from the original localstack-pro-samples repository to provide comprehensive AWS service examples for LocalStack users.
+
+**Source Repository:** https://github.com/localstack-samples/localstack-pro-samples
 
 ## What Changes
 
-Port high-priority samples from the old repository structure to the new convention:
+### Ported from Original Repo
 
-1. **lambda-function-urls** - Lambda with direct HTTP endpoints (Function URLs)
-2. **stepfunctions-lambda** - Step Functions orchestrating Lambda functions
-3. **apigw-websockets** - API Gateway V2 WebSocket APIs (blocked - requires API Gateway V2)
-4. **lambda-layers** - Lambda Layers for code sharing (in progress - layer loading issues)
-5. **apigw-custom-domain** - API Gateway custom domain mapping
-6. **ecs-ecr-app** - Containerized app on ECS with ECR
+| Original Sample | Target Location | Status |
+|-----------------|-----------------|--------|
+| `lambda-function-urls-python` | `samples/lambda-function-urls/python` | Done |
+| `stepfunctions-lambda` | `samples/stepfunctions-lambda/python` | Done |
+| `serverless-lambda-layers` | `samples/lambda-layers/javascript` | To Do |
+| `serverless-websockets` | `samples/apigw-websockets/javascript` | To Do |
+| `ecs-ecr-container-app` | `samples/ecs-ecr-app/python` | To Do |
+| `apigw-custom-domain` | `samples/apigw-custom-domain/python` | To Do |
+
+### New Samples (Not from Original)
+
+These samples were created new to fill gaps:
+
+| Sample | Description | Status |
+|--------|-------------|--------|
+| `lambda-cloudfront/python` | Lambda + CloudFront pattern | Done |
+| `lambda-s3-http/python` | Lambda + S3 + SQS pattern | Done |
+| `web-app-dynamodb/python` | Web app with DynamoDB | Done |
+| `web-app-rds/python` | Web app with RDS PostgreSQL | Done |
 
 ## Capabilities
 
-### New Capabilities
+### Ported Capabilities
 
 - **lambda-function-urls/python**: Lambda Function URLs with public HTTP access
+  - Ported from: `lambda-function-urls-python`
   - Tests: function creation, URL configuration, direct invocation, HTTP GET/POST
-  - Includes Terraform deployment option
 
 - **stepfunctions-lambda/python**: Step Functions parallel workflow
-  - Tests: individual Lambda functions, state machine creation, execution flow, output validation
+  - Ported from: `stepfunctions-lambda`
+  - Tests: individual Lambda functions, state machine creation, execution flow
 
-### Modified Capabilities
+### New Capabilities
 
-- **run-samples.sh**: Added new samples to test matrix
-- **PORTING.md**: Updated to track porting progress
+- **lambda-cloudfront/python**: Lambda with Function URL (CloudFront-ready)
+- **lambda-s3-http/python**: Gaming scoreboard with Lambda, S3, SQS, DynamoDB
+- **web-app-dynamodb/python**: CRUD API with Lambda + DynamoDB
+- **web-app-rds/python**: Web API with Lambda + RDS PostgreSQL
 
 ## Impact
 
-- Expands the sample coverage for LocalStack users
-- Demonstrates more AWS service patterns locally
-- No impact on existing samples (additive changes only)
+- Expands sample coverage for LocalStack users
+- Preserves original sample implementations where applicable
+- All 6 current samples pass CI tests

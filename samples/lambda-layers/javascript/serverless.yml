@@ -1,0 +1,37 @@
+service: lambda-layers-sample
+
+provider:
+  name: aws
+  region: ${opt:region, 'us-east-1'}
+  runtime: nodejs18.x
+  deploymentBucket:
+    name: lambda-layers-deployment
+
+functions:
+  hello:
+    handler: src/handler.hello
+    layers:
+      - { Ref: SharedLambdaLayer }
+    events:
+      - http:
+          path: "/"
+          method: "get"
+          integration: "lambda-proxy"
+
+layers:
+  shared:
+    path: src/layer
+    description: Shared utility library
+    compatibleRuntimes:
+      - nodejs18.x
+      - nodejs20.x
+
+plugins:
+  - serverless-localstack
+
+custom:
+  localstack:
+    stages:
+      - local
+    host: http://localhost
+    edgePort: 4566

@@ -1,0 +1,14 @@
+{
+  "name": "lambda-layers-sample",
+  "version": "1.0.0",
+  "description": "Lambda Layers sample for LocalStack",
+  "scripts": {
+    "deploy": "serverless deploy --stage local",
+    "remove": "serverless remove --stage local",
+    "invoke": "serverless invoke --stage local --function hello"
+  },
+  "devDependencies": {
+    "serverless": "^3.38.0",
+    "serverless-localstack": "^1.2.0"
+  }
+}

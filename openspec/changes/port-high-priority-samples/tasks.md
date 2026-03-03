@@ -1,74 +1,75 @@
 # Tasks: Port High Priority Samples
 
+Source: https://github.com/localstack-samples/localstack-pro-samples
+
 ## Completed
 
-- [x] Create lambda-function-urls/python sample
+### Ported from Original Repo
+
+- [x] Port `lambda-function-urls-python` → `samples/lambda-function-urls/python`
   - [x] Create directory structure
-  - [x] Write src/handler.py
+  - [x] Port handler.py
   - [x] Write scripts/deploy.sh
   - [x] Write scripts/test.sh (7 test cases)
-  - [x] Write README.md
   - [x] Add Terraform deployment option
-  - [x] Test locally - all tests pass
+  - [x] CI passing
 
-- [x] Create stepfunctions-lambda/python sample
+- [x] Port `stepfunctions-lambda` → `samples/stepfunctions-lambda/python`
   - [x] Create directory structure
-  - [x] Write src/lambda_adam.py, lambda_cole.py, lambda_combine.py
-  - [x] Write src/state-machine.json
+  - [x] Port Lambda functions (adam, cole, combine)
+  - [x] Port state-machine.json
   - [x] Write scripts/deploy.sh
   - [x] Write scripts/test.sh (10 test cases)
-  - [x] Write README.md
-  - [x] Test locally - all tests pass
+  - [x] CI passing
 
-- [x] Update run-samples.sh with new samples
-- [x] Update PORTING.md
+### New Samples (Not Ports)
 
-- [x] Fix Lambda state timing issues in existing samples
-  - [x] Add wait loop to lambda-cloudfront/python/scripts/deploy.sh
-  - [x] Add wait loop to lambda-s3-http/python/scripts/deploy.sh
-  - [x] Add wait loop to web-app-dynamodb/python/scripts/deploy.sh
-  - [x] Add wait loop to web-app-rds/python/scripts/deploy.sh
-  - [x] All 4 samples pass CI tests
+- [x] Create `lambda-cloudfront/python` (new sample)
+- [x] Create `lambda-s3-http/python` (new sample)
+- [x] Create `web-app-dynamodb/python` (new sample)
+- [x] Create `web-app-rds/python` (new sample)
+
+### Infrastructure
+
+- [x] Fix Lambda state timing issues in all deploy scripts
+- [x] Fix CI workflow to run all tests on push to master
+- [x] All 6 samples pass CI
 
 ## In Progress
 
-- [ ] Fix lambda-layers/python sample
-  - [x] Create directory structure
-  - [x] Write src/layer/utils.py
-  - [x] Write src/handler.py
+- [ ] Port `serverless-lambda-layers` → `samples/lambda-layers/javascript`
+  - [x] Research original implementation
+  - [x] Create directory structure with serverless.yml
+  - [x] Port handler.js and layer/nodejs/lib.js
   - [x] Write scripts/deploy.sh
-  - [x] Write scripts/test.sh
-  - [ ] Debug layer loading issue (/opt/python not in path)
-
-## Blocked
-
-- [ ] Create apigw-websockets/python sample
-  - Blocked: API Gateway V2 not available in current LocalStack license
-  - Action: Skip or document as requiring specific license
+  - [x] Write scripts/test.sh (5 test cases)
+  - [x] Add to run-samples.sh
+  - [ ] Test locally and fix any issues
+  - [ ] Verify CI passes
 
 ## To Do
 
-- [ ] Create apigw-custom-domain sample
-  - [ ] Research old implementation
+### Port from Original Repo
+
+- [ ] Port `serverless-websockets` → `samples/apigw-websockets/javascript`
+  - Uses Serverless Framework
+  - May require API Gateway V2 (check LocalStack license)
+
+- [ ] Port `ecs-ecr-container-app` → `samples/ecs-ecr-app/python`
+  - [ ] Research original implementation
   - [ ] Create directory structure
   - [ ] Write deployment and test scripts
-  - [ ] Test locally
 
-- [ ] Create ecs-ecr-app sample
-  - [ ] Research old implementation
-  - [ ] Create CloudFormation templates
+- [ ] Port `apigw-custom-domain` → `samples/apigw-custom-domain/python`
+  - [ ] Research original implementation
+  - [ ] Create directory structure
   - [ ] Write deployment and test scripts
-  - [ ] Test locally
 
-- [ ] Push changes and verify CI
-  - [ ] Commit all new samples
-  - [ ] Push to master
-  - [ ] Verify GitHub Actions runs tests
-  - [ ] Fix any CI failures
+## Cleanup
 
-## Notes
+- [x] Remove broken `samples/lambda-layers/python` (replaced with javascript version)
 
-- lambda-function-urls: Working, 7 tests pass
-- stepfunctions-lambda: Working, 10 tests pass
-- lambda-layers: Issue with LocalStack not putting layer in Python path
-- apigw-websockets: Requires API Gateway V2 (may not be in license)
+## CI Status
+
+Latest: https://github.com/dmacvicar/localstack-aws-samples/actions/runs/22632353146
+6 samples passing (lambda-layers/javascript pending test).

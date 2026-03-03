@@ -39,6 +39,7 @@ LIST_MODE=${LIST_MODE:-false}
 SCRIPT_SAMPLES=(
     "samples/lambda-cloudfront/python|scripts/deploy.sh|scripts/test.sh|samples/lambda-cloudfront/python/scripts,samples/lambda-cloudfront/python/src"
     "samples/lambda-function-urls/python|scripts/deploy.sh|scripts/test.sh|samples/lambda-function-urls/python/scripts,samples/lambda-function-urls/python/src"
+    "samples/lambda-layers/javascript|scripts/deploy.sh|scripts/test.sh|samples/lambda-layers/javascript/scripts,samples/lambda-layers/javascript/src"
     "samples/lambda-s3-http/python|scripts/deploy.sh|scripts/test.sh|samples/lambda-s3-http/python/scripts,samples/lambda-s3-http/python/src"
     "samples/stepfunctions-lambda/python|scripts/deploy.sh|scripts/test.sh|samples/stepfunctions-lambda/python/scripts,samples/stepfunctions-lambda/python/src"
     "samples/web-app-dynamodb/python|scripts/deploy.sh|scripts/test.sh|samples/web-app-dynamodb/python/scripts,samples/web-app-dynamodb/python/src"
