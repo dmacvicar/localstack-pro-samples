@@ -154,7 +154,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: localstack-logs-${{ matrix.name }}
+          name: localstack-logs-${{ matrix.shard }}
           path: localstack.log
           retention-days: 7
 

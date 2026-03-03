@@ -52,11 +52,20 @@ echo ""
 echo "Test 1: Lambda functions state"
 
 for func_name in "$ADAM_FUNCTION" "$COLE_FUNCTION" "$COMBINE_FUNCTION"; do
-    FUNCTION_STATE=$($AWS lambda get-function \
-        --function-name "$func_name" \
-        --query 'Configuration.State' \
-        --output text \
-        --region "$REGION" 2>/dev/null || echo "NOT_FOUND")
+    # Wait for function to be active (up to 30 seconds)
+    echo "  Waiting for $func_name to be active..."
+    for i in {1..15}; do
+        FUNCTION_STATE=$($AWS lambda get-function \
+            --function-name "$func_name" \
+            --query 'Configuration.State' \
+            --output text \
+            --region "$REGION" 2>/dev/null || echo "NOT_FOUND")
+
+        if [[ "$FUNCTION_STATE" == "Active" ]]; then
+            break
+        fi
+        sleep 2
+    done
 
     if [[ "$FUNCTION_STATE" == "Active" ]]; then
         pass "$func_name is Active"
