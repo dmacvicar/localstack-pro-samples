@@ -23,6 +23,13 @@
 - [x] Update run-samples.sh with new samples
 - [x] Update PORTING.md
 
+- [x] Fix Lambda state timing issues in existing samples
+  - [x] Add wait loop to lambda-cloudfront/python/scripts/deploy.sh
+  - [x] Add wait loop to lambda-s3-http/python/scripts/deploy.sh
+  - [x] Add wait loop to web-app-dynamodb/python/scripts/deploy.sh
+  - [x] Add wait loop to web-app-rds/python/scripts/deploy.sh
+  - [x] All 4 samples pass CI tests
+
 ## In Progress
 
 - [ ] Fix lambda-layers/python sample
