@@ -1,25 +1,25 @@
-usage:         ## Show this help
-	@fgrep -h "##" $(MAKEFILE_LIST) | fgrep -v fgrep | sed -e 's/\\$$//' | sed -e 's/##//'
+.PHONY: install test logs clean
 
-install:       ## Install dependencies for all projects
-	MAKE_TARGET='install' make for-each-dir
+VENV := .venv
 
-lint:          ## Run code linter for all projects
-	MAKE_TARGET='lint' make for-each-dir
+# Default shard configuration
+SHARD ?= 1
+SPLITS ?= 1
 
-start:         ## Start LocalStack infrastructure
-	localstack start -d
+install:
+	uv venv $(VENV)
+	uv pip install -r requirements-dev.txt
+	@echo "Installation complete. Activate with: source $(VENV)/bin/activate"
 
-ready:         ## Check if the LocalStack container is up and running.
-	localstack wait -t 20 && echo "LocalStack is ready to use!"
+test:
+	./run-samples.sh SHARD=$(SHARD) SPLITS=$(SPLITS)
 
-stop:          ## Stop LocalStack infrastructure
-	localstack stop
+logs:
+	docker logs localstack 2>&1 | tail -100
 
-for-each-dir:
-	./make-for-each.sh $$MAKE_TARGET $$CMD
-
-test-ci-all:
-	MAKE_TARGET='test-ci' make for-each-dir
-
-.PHONY: usage install lint start ready stop for-each-dir test-ci-all
+clean:
+	rm -rf $(VENV)
+	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+	find . -type d -name "node_modules" -exec rm -rf {} + 2>/dev/null || true
+	find . -type d -name ".terraform" -exec rm -rf {} + 2>/dev/null || true
+	find . -type d -name ".aws-sam" -exec rm -rf {} + 2>/dev/null || true

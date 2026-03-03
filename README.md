@@ -1,127 +1,136 @@
 # LocalStack Pro Samples
 
-[![Run Samples](https://github.com/localstack/localstack-pro-samples/actions/workflows/run-samples.yml/badge.svg)](https://github.com/localstack/localstack-pro-samples/actions/workflows/run-samples.yml)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![LocalStack Pro](https://img.shields.io/badge/LocalStack-Pro-purple.svg)](https://localstack.cloud)
+[![AWS](https://img.shields.io/badge/AWS-Compatible-orange.svg)](https://aws.amazon.com)
+[![CI](https://github.com/localstack/localstack-aws-samples/actions/workflows/run-samples.yml/badge.svg)](https://github.com/localstack/localstack-aws-samples/actions/workflows/run-samples.yml)
 
-This repository contains sample projects that can be deployed on your local machine using [LocalStack Pro](https://localstack.cloud/).
-
-Each example in the repository is prefixed with the name of the AWS service being used. For example, the `elb-load-balancing` directory contains examples that demonstrate how to use the Elastic Load Balancing service with LocalStack. Please refer to the sub directories for more details and instructions on how to start the samples.
+This repository contains sample applications demonstrating LocalStack Pro features for AWS service emulation. Each sample showcases real-world AWS patterns that can be developed and tested locally using LocalStack.
 
 ## Prerequisites
 
-* [Docker](https://docs.docker.com/get-docker/)
-* [`awslocal` CLI](https://docs.localstack.cloud/user-guide/integrations/aws-cli/)
-* [Serverless](https://www.serverless.com/framework/docs/getting-started)
-* [Terraform](https://developer.hashicorp.com/terraform/downloads)
-* `make` & `jq`
+### Required Tools
+
+- [Docker](https://docs.docker.com/get-docker/) - Container runtime for LocalStack
+- [AWS CLI](https://aws.amazon.com/cli/) - AWS command line interface
+- [awslocal](https://docs.localstack.cloud/user-guide/integrations/aws-cli/#localstack-aws-cli-awslocal) - LocalStack wrapper for AWS CLI
+- [jq](https://stedolan.github.io/jq/) - JSON processor for parsing outputs
+
+### Infrastructure as Code
+
+- [Terraform](https://www.terraform.io/) - Multi-cloud infrastructure provisioning
+- [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html) - Serverless Application Model
+- [AWS CDK](https://docs.aws.amazon.com/cdk/latest/guide/getting_started.html) - Cloud Development Kit
+
+### Development Tools
+
+- [Python 3.10+](https://www.python.org/) - Required for Python samples
+- [Node.js 18+](https://nodejs.org/) - Required for JavaScript/TypeScript samples
+
+## Samples
+
+| Sample | Description | Services | Azure Equivalent |
+|--------|-------------|----------|------------------|
+| [lambda-cloudfront](samples/lambda-cloudfront/) | Lambda function fronted by CloudFront CDN | Lambda, CloudFront | function-app-front-door |
+| [lambda-s3-http](samples/lambda-s3-http/) | Gaming scoreboard with HTTP, S3, and SQS triggers | Lambda, S3, SQS, DynamoDB | function-app-storage-http |
+| [web-app-dynamodb](samples/web-app-dynamodb/) | Web application with DynamoDB NoSQL backend | Lambda, DynamoDB | web-app-cosmosdb-nosql-api |
+| [web-app-rds](samples/web-app-rds/) | Web application with RDS PostgreSQL backend | Lambda, RDS | web-app-sql-database |
+
+## Sample Structure
+
+Each sample follows a consistent organization:
+
+```
+samples/{sample-name}/
+├── {language}/                 # python, javascript, etc.
+│   ├── README.md              # Sample documentation
+│   ├── scripts/               # Deployment and test scripts
+│   │   ├── deploy.sh          # Primary deployment script
+│   │   ├── validate.sh        # Resource validation
+│   │   └── test.sh            # Functional tests
+│   ├── terraform/             # Terraform configuration (optional)
+│   │   ├── main.tf
+│   │   ├── providers.tf
+│   │   ├── variables.tf
+│   │   └── outputs.tf
+│   ├── sam/                   # SAM template (optional)
+│   │   └── template.yaml
+│   └── src/                   # Application source code
+```
+
+## Local Testing
+
+### Quick Start
+
+1. Start LocalStack Pro:
+```bash
+export LOCALSTACK_AUTH_TOKEN=your-auth-token
+docker run -d --name localstack \
+  -p 4566:4566 \
+  -e LOCALSTACK_AUTH_TOKEN \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  localstack/localstack-pro
+```
+
+2. Run all tests:
+```bash
+./run-samples.sh
+```
+
+3. Run a specific sample:
+```bash
+./run-samples.sh SHARD=1 SPLITS=5
+```
+
+### Using Make
+
+```bash
+make install    # Install dependencies
+make test       # Run all tests
+make logs       # Show LocalStack logs
+```
+
+## Troubleshooting
+
+### Line Ending Issues
+
+If scripts fail with `\r` errors on Windows/WSL:
+```bash
+git config core.autocrlf false
+git checkout -- .
+```
+
+### LocalStack Connection
+
+Verify LocalStack is running:
+```bash
+curl http://localhost:4566/_localstack/health
+```
 
 ## Configuration
 
-Some of the samples require LocalStack Pro features. Please make sure to properly configure the `LOCALSTACK_AUTH_TOKEN` environment variable. You can find your Auth Token on the [LocalStack Web Application](https://app.localstack.cloud/workspace/auth-token) and you can refer to our [Auth Token documentation](https://docs.localstack.cloud/getting-started/auth-token/) for more details.
+See [docs/LOCALSTACK.md](docs/LOCALSTACK.md) for detailed LocalStack configuration options.
 
-## Outline
+## Documentation
 
-| Sample Name                                                    | Description                                                                                        |
-| -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| [Serverless Websockets](serverless-websockets)                 | API Gateway V2 websocket APIs deployed via the Serverless framework                                |
-| [RDS Database Queries](rds-db-queries)                         | Running queries locally against an RDS database                                                    |
-| [Neptune Graph Database](neptune-graph-db)                     | Running queries locally against a Neptune Graph database                                           |
-| [Lambda Event Filtering](lambda-event-filtering)               | Lambda event source filtering with DynamoDB and SQS                                                |
-| [Glacier & S3 select queries](glacier-s3-select)               | Using Glacier API and running S3 Select queries locally                                            |
-| [Cloudwatch Metrics alarm](cloudwatch-metrics-aws)             | Triggering a Cloudwatch metrics alarm based on a failing Lambda                                    |
-| [EC2 with Docker backend](ec2-docker-instances)                | Running EC2 instances with Docker backend                                                          |
-| [QLDB ledger queries](qldb-ledger-queries)                     | Running queries locally against a QLDB ledger                                                      |
-| [Cognito with JWT](cognito-jwt)                                | Running Cognito authentication and user pools locally                                              |
-| [Transfer API with S3](transfer-ftp-s3)                        | Using the Transfer API to upload files to S3                                                       |
-| [Codecommit with Git repository](codecommit-git-repo)          | Using the Codecommit API to create and push to a Git repository                                    |
-| [Lambda Debugging SAM Java](lambda-debugging-sam-java)         | Debugging Java Lambda functions using AWS SAM                                                      |
-| [Lambda Debugging SAM JavaScript](lambda-debugging-sam-javascript) | Debugging JavaScript Lambda functions using AWS SAM                                           |
-| [Lambda Debugging SAM Python](lambda-debugging-sam-python)     | Debugging Python Lambda functions using AWS SAM                                                   |
-| [Lambda Debugging SAM TypeScript](lambda-debugging-sam-typescript) | Debugging TypeScript Lambda functions using AWS SAM                                           |
-| [IAM Policy Enforcement](iam-policy-enforcement)               | Enforcement of IAM policies when working with local cloud APIs                                     |
-| [Lambda Hot Reloading](lambda-hot-reloading)                   | Hot reloading Lambda functions locally                                                             |
-| [IoT Basics](iot-basics)                                       | Usage of IoT APIs locally                                                                          |
-| [REST API using Chalice](chalice-rest-api)                     | Deploying a REST API using the Chalice framework                                                   |
-| [ECS ECR Container application](ecs-ecr-container-app)         | Pushing Docker images to ECR and running them locally on ECS                                       |
-| [Athena queries over S3](athena-s3-queries)                    | Running Athena queries over S3 files locally                                                       |
-| [Terraform resources](terraform-resources)                     | Deploying various AWS resources via Terraform                                                      |
-| [Lambda Function URLs](lambda-function-urls)                   | Invoking Lambda functions via HTTP(s) URLs                                                         |
-| [Sagemaker inference](sagemaker-inference)                     | Creating & invoking a Sagemaker endpoint locally with MNIST dataset                                |
-| [MSK with Glue Schema Registry](glue-msk-schema-registry)      | Use of MSK, Glue Schema Registry, Glue ETL, and RDS                                                |
-| [AppSync GraphQL](appsync-graphql-api)                         | Deploying a GraphQL API using AppSync                                                              |
-| [Lambda XRay tracing](lambda-xray)                             | Using Lambda XRay tracing locally                                                                  |
-| [Mediastore Uploads](mediastore-uploads)                       | Using MediaStore API locally                                                                       |
-| [Serverless Lambda Layers](serverless-lambda-layers)           | Using Lambda layers locally deployed via the Serverless framework                                  |
-| [Java Notification App](java-notification-app)                 | Notification app using AWS Java SDK, SNS, SQS, SES, deployed via CloudFormation                    |
-| [Lambda Container images](lambda-container-image)              | Deploying Lambda functions as container images                                                     |
-| [Glue crawler with RedShift](glue-redshift-crawler)            | Glue Crawler to populate the Glue metadata store with the table schema of RedShift database tables |
-| [API Gateway custom domain](apigw-custom-domain)               | Using API Gateway v2 endpoints using custom domain names, deployed via the Serverless framework    |
-| [CDK resources](cdk-resources)                                 | Deploying various AWS resources via CDK                                                            |
-| [Glue for ETL jobs](glue-etl-jobs)                             | Using Glue API to run local ETL jobs                                                               |
-| [Message Queue broker](mq-broker)                              | Using MQ API to run local message queue brokers                                                    |
-| [ELB Load Balancing](elb-load-balancing)                       | Using ELBv2 Application Load Balancers locally, deployed via the Serverless framework              |
-| [Reproducible ML](reproducible-ml)                             | Train, save and evaluate a scikit-learn machine learning model using AWS Lambda and S3             |
-| [Lambda PHP/Bref CDK App](lambda-php-bref-cdk-app)             | Running PHP/Bref Lambda handler locally, deployed via AWS CDK                                      |
+- [LocalStack Documentation](https://docs.localstack.cloud/)
+- [LocalStack Pro Features](https://docs.localstack.cloud/user-guide/aws/feature-coverage/)
+- [AWS CLI with LocalStack](https://docs.localstack.cloud/user-guide/integrations/aws-cli/)
 
-## Checking out a single sample
+## Contributing
 
-To check out a single sample, you can use the following commands:
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/new-sample`
+3. Make your changes following the sample structure conventions
+4. Test locally with LocalStack
+5. Submit a pull request
 
-```bash
-mkdir localstack-samples && cd localstack-samples
-git init
-git remote add origin -f git@github.com:localstack/localstack-pro-samples.git
-git config core.sparseCheckout true
-echo <LOCALSTACK_SAMPLE_DIRECTORY_NAME> >> .git/info/sparse-checkout
-git pull origin master
-```
+## License
 
-The above commands use `sparse-checkout` to only pull the sample you are interested in. You can find the name of the sample directory in the table above.
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
 
-# Developer Notes
+## Support
 
-## Makefiles for samples
-All samples should have a Makefile to unify the execution of the otherwise heterogeneous samples.
-It needs to fulfill two criteria:
-- The sample should be executable independently, since it can be checked out on its own (see [Checking out a single sample](#checking-out-a-single-sample)).
-- It should contain a `test-ci` target to be executed automatically within the CI pipeline. This step needs to take care of all infrastructure tasks (starting/stopping/logs/etc) in addition to any sample commands executed.
-
-A typical Makefile looks like this:
-```bash
-export AWS_ACCESS_KEY_ID ?= test
-export AWS_SECRET_ACCESS_KEY ?= test
-export AWS_DEFAULT_REGION=us-east-1
-SHELL := /bin/bash
-
-usage:       ## Show this help
-        @fgrep -h "##" $(MAKEFILE_LIST) | fgrep -v fgrep | sed -e 's/\\$$//' | sed -e 's/##//'
-
-install:     ## Install dependencies
-        @which localstack || pip install localstack
-        @which awslocal || pip install awscli-local
-        ## install whatever else you need, like node modules, python packages, etc.
-        @test -e node_modules || npm install
-        @test -e .venv || (python3 -m venv .venv; source .venv/bin/activate; pip install -r requirements.txt)
-
-run:         ## Run the actual sample steps/commands. This assumes LocalStack is up and running.
-        ./run.sh
-
-start:       ## Start LocalStack in detached mode
-        localstack start -d
-
-stop:        ## Stop the Running LocalStack container
-        @echo
-        localstack stop
-
-ready:       ## Make sure the LocalStack container is up
-        @echo Waiting on the LocalStack container...
-        @localstack wait -t 30 && echo LocalStack is ready to use! || (echo Gave up waiting on LocalStack, exiting. && exit 1)
-
-logs:        ## Save the logs in a separate file, since the LS container will only contain the logs of the last sample run.
-        @localstack logs > logs.txt
-
-test-ci:     ## Execute the necessary targets in the correct order for an automatic execution. 
-        make start install ready run; return_code=`echo $$?`;\
-        make logs; make stop; exit $$return_code;
-
-.PHONY: usage install run start stop ready logs test-ci
-```
+- [GitHub Issues](https://github.com/localstack/localstack-aws-samples/issues) - Bug reports and feature requests
+- [LocalStack Slack](https://localstack.cloud/contact) - Community support
+- [LocalStack Pro Support](https://localstack.cloud/pricing) - Enterprise support

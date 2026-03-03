@@ -1,0 +1,25 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Shell scripts must use LF
+*.sh text eol=lf
+
+# Explicitly declare text files
+*.md text
+*.txt text
+*.json text
+*.yaml text
+*.yml text
+*.tf text
+*.py text
+*.js text
+*.ts text
+
+# Denote binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.zip binary
+*.jar binary

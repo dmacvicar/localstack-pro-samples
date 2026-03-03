@@ -1,3 +1,0 @@
-#!/bin/bash
-# Wrapper for tflocal using uvx
-exec uvx --from terraform-local tflocal "$@"

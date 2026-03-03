@@ -1,3 +1,0 @@
-#!/bin/bash
-# Wrapper for cdklocal using uvx
-exec uvx --from aws-cdk-local cdklocal "$@"

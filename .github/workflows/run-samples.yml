@@ -1,76 +1,66 @@
-name: Run LocalStack Pro Samples
+name: Run Samples
 
 on:
-  push:
-    branches: [main, master]
   pull_request:
+    branches: [main, master]
+  push:
     branches: [main, master]
   workflow_dispatch:
     inputs:
-      mode:
-        description: 'Run mode'
+      run_mode:
+        description: 'Run mode: all or changed'
+        required: false
+        default: 'all'
         type: choice
         options:
-          - changed
           - all
-        default: changed
+          - changed
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 env:
-  LOCALSTACK_AUTH_TOKEN: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}
-  LOCALSTACK_IMAGE: localstack/localstack-pro:latest
+  DEFAULT_RUN_MODE: 'changed'
 
 jobs:
-  build-matrix:
+  setup:
     name: Build Test Matrix
     runs-on: ubuntu-latest
     outputs:
-      matrix: ${{ steps.matrix.outputs.matrix }}
-      has_samples: ${{ steps.matrix.outputs.has_samples }}
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      has_tests: ${{ steps.set-matrix.outputs.has_tests }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Build Matrix
-        id: matrix
+      - name: Build matrix
+        id: set-matrix
+        env:
+          RUN_MODE: ${{ github.event.inputs.run_mode || env.DEFAULT_RUN_MODE }}
         run: |
-          MODE="${{ github.event.inputs.mode || 'changed' }}"
+          matrix=$(.github/scripts/build-matrix.sh)
+          echo "Matrix: $matrix"
 
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            BASE_SHA="${{ github.event.pull_request.base.sha }}"
-            HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          # Check if matrix is empty
+          if [[ "$matrix" == "[]" ]] || [[ -z "$matrix" ]]; then
+            echo "has_tests=false" >> $GITHUB_OUTPUT
+            echo "matrix={\"include\":[]}" >> $GITHUB_OUTPUT
           else
-            BASE_SHA="${{ github.event.before }}"
-            HEAD_SHA="${{ github.sha }}"
+            echo "has_tests=true" >> $GITHUB_OUTPUT
+            echo "matrix={\"include\":$matrix}" >> $GITHUB_OUTPUT
           fi
 
-          MATRIX=$(.github/scripts/build-matrix.sh --mode "$MODE" --base-sha "$BASE_SHA" --head-sha "$HEAD_SHA")
-          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
-
-          # Check if matrix has samples
-          SAMPLE_COUNT=$(echo "$MATRIX" | jq '.include | length')
-          if [ "$SAMPLE_COUNT" -gt 0 ]; then
-            echo "has_samples=true" >> $GITHUB_OUTPUT
-          else
-            echo "has_samples=false" >> $GITHUB_OUTPUT
-          fi
-
-          echo "Matrix: $MATRIX"
-          echo "Sample count: $SAMPLE_COUNT"
-
-  run-samples:
-    name: ${{ matrix.name }}
-    needs: build-matrix
-    if: needs.build-matrix.outputs.has_samples == 'true'
+  test:
+    name: 'Test: ${{ matrix.name }}'
+    needs: setup
+    if: needs.setup.outputs.has_tests == 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.build-matrix.outputs.matrix) }}
+      matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -78,159 +68,112 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.12'
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v4
-
-      - name: Install LocalStack CLI
+      - name: Install system dependencies
         run: |
-          pip install localstack awscli-local
-          npm install -g aws-cdk-local aws-cdk
+          sudo apt-get update
+          sudo apt-get install -y jq zip unzip curl
 
-      - name: Docker Login
-        if: env.DOCKERHUB_USERNAME != ''
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.5.0'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Install AWS CLI and awslocal
+        run: |
+          uv tool install awscli
+          uv tool install awscli-local
+          aws --version
+          awslocal --version
+
+      - name: Install test dependencies
+        run: |
+          uv venv .venv
+          uv pip install -r requirements-dev.txt
+
+      - name: Login to Docker Hub
+        if: ${{ env.DOCKERHUB_USERNAME != '' }}
         uses: docker/login-action@v3
-        env:
-          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
 
-      - name: Pull LocalStack Image
-        run: docker pull ${{ env.LOCALSTACK_IMAGE }}
-        continue-on-error: true
+      - name: Free disk space
+        run: |
+          docker system prune -af --volumes || true
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/boost || true
+
+      - name: Pull LocalStack image
+        run: docker pull localstack/localstack-pro:latest
 
       - name: Start LocalStack
+        env:
+          LOCALSTACK_AUTH_TOKEN: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}
         run: |
-          localstack start -d
-          echo "Waiting for LocalStack to be ready..."
-          localstack wait -t 60
-          echo "LocalStack is ready"
+          docker run -d \
+            --name localstack \
+            -p 4566:4566 \
+            -p 4510-4559:4510-4559 \
+            -e LOCALSTACK_AUTH_TOKEN \
+            -e DEBUG=1 \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            localstack/localstack-pro:latest
 
-      - name: Run Sample
-        id: run
+          # Wait for LocalStack to be ready
+          echo "Waiting for LocalStack..."
+          timeout 60 bash -c 'until curl -s http://localhost:4566/_localstack/health | jq -e ".services" > /dev/null 2>&1; do sleep 2; done'
+          echo "LocalStack is ready!"
+
+      - name: Run test
+        env:
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+          AWS_DEFAULT_REGION: us-east-1
         run: |
-          chmod +x run-samples.sh
-          ./run-samples.sh --sample "${{ matrix.name }}"
+          ./run-samples.sh SHARD=${{ matrix.shard }} SPLITS=${{ matrix.splits }}
 
-      - name: Save Result
+      - name: Capture LocalStack logs
         if: always()
         run: |
-          mkdir -p /tmp/results
-          if [ "${{ steps.run.outcome }}" = "success" ]; then
-            echo "passed" > /tmp/results/${{ matrix.name }}.txt
-          else
-            echo "failed" > /tmp/results/${{ matrix.name }}.txt
-          fi
+          docker logs localstack > localstack.log 2>&1 || true
+          echo "=== LocalStack Logs (last 100 lines) ==="
+          tail -100 localstack.log
 
-      - name: Upload Result
-        if: always()
+      - name: Upload logs
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: result-${{ matrix.name }}
-          path: /tmp/results/${{ matrix.name }}.txt
-
-      - name: Show LocalStack Logs
-        if: failure()
-        run: localstack logs
-
-      - name: Stop LocalStack
-        if: always()
-        run: localstack stop || true
+          name: localstack-logs-${{ matrix.name }}
+          path: localstack.log
+          retention-days: 7
 
   summary:
     name: Test Summary
-    needs: [build-matrix, run-samples]
+    needs: [setup, test]
     if: always()
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Download All Results
-        if: needs.build-matrix.outputs.has_samples == 'true'
-        uses: actions/download-artifact@v4
-        with:
-          path: results
-          pattern: result-*
-
-      - name: Generate Badge JSONs
-        if: needs.build-matrix.outputs.has_samples == 'true'
+      - name: Check results
         run: |
-          mkdir -p badges
-
-          for dir in results/result-*; do
-            if [ -d "$dir" ]; then
-              sample=$(basename "$dir" | sed 's/result-//')
-              status=$(cat "$dir"/*.txt 2>/dev/null || echo "unknown")
-
-              if [ "$status" = "passed" ]; then
-                color="brightgreen"
-                message="passing"
-              else
-                color="red"
-                message="failing"
-              fi
-
-              cat > "badges/${sample}.json" << EOF
-          {
-            "schemaVersion": 1,
-            "label": "$sample",
-            "message": "$message",
-            "color": "$color"
-          }
-          EOF
-              echo "Generated badges/${sample}.json"
-            fi
-          done
-
-          ls -la badges/
-
-      - name: Update Status Branch
-        if: github.event_name == 'push' && github.ref == 'refs/heads/master' && needs.build-matrix.outputs.has_samples == 'true'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          # Fetch or create status branch
-          git fetch origin status:status 2>/dev/null || true
-
-          # Save badges to temp location
-          cp -r badges /tmp/badges
-
-          # Switch to status branch (create if needed)
-          if git show-ref --verify --quiet refs/heads/status; then
-            git checkout status
-          else
-            git checkout --orphan status
-            git rm -rf . 2>/dev/null || true
-          fi
-
-          # Copy badges and commit
-          mkdir -p badges
-          cp -r /tmp/badges/* badges/
-          git add badges/
-          git commit -m "Update sample badges [skip ci]" || true
-          git push origin status || true
-
-      - name: Check Results
-        run: |
-          if [ "${{ needs.build-matrix.outputs.has_samples }}" = "false" ]; then
-            echo "No samples to test (no changes detected)"
+          if [[ "${{ needs.setup.outputs.has_tests }}" == "false" ]]; then
+            echo "No tests were run (no matching changes found)"
             exit 0
           fi
 
-          if [ "${{ needs.run-samples.result }}" = "success" ]; then
-            echo "All samples passed!"
-          elif [ "${{ needs.run-samples.result }}" = "skipped" ]; then
-            echo "Samples were skipped"
-          else
-            echo "Some samples failed"
+          if [[ "${{ needs.test.result }}" == "failure" ]]; then
+            echo "Some tests failed"
             exit 1
           fi
+
+          echo "All tests passed!"

@@ -1,265 +1,237 @@
 #!/bin/bash
-# LocalStack Pro Samples CI Orchestrator
-# Runs AWS samples against LocalStack Pro with sharding support
-
 set -euo pipefail
 
-# Add local bin to PATH for awslocal wrapper
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-export PATH="$SCRIPT_DIR/bin:$PATH"
+# =============================================================================
+# LocalStack Pro Samples - Test Runner
+# =============================================================================
+# This script runs sample tests with support for sharding in CI environments.
+#
+# Usage:
+#   ./run-samples.sh                    # Run all samples
+#   ./run-samples.sh SHARD=1 SPLITS=5   # Run first shard of 5
+#   ./run-samples.sh --list             # Output JSON metadata for CI matrix
+# =============================================================================
 
-# Sample definitions: "path|ci_command"
-# Runs install + run (LocalStack managed externally by CI workflow)
-# Only includes samples using services available in LocalStack license
-# Sample definitions: "path|deploy_command|test_command"
-# Pattern matches Azure samples: deploy, then validate+test
-SAMPLES=(
-  "lambda-function-urls-python|make install && make run|bash scripts/validate.sh && bash scripts/test.sh"
-  "lambda-function-urls-javascript|make install && make run|"
-  "stepfunctions-lambda|make install && make create-lambdas|bash scripts/validate.sh && bash scripts/test.sh"
+# Parse command line arguments
+for arg in "$@"; do
+    case $arg in
+        SHARD=*)
+            SHARD="${arg#*=}"
+            ;;
+        SPLITS=*)
+            SPLITS="${arg#*=}"
+            ;;
+        --list)
+            LIST_MODE=true
+            ;;
+    esac
+done
+
+SHARD=${SHARD:-1}
+SPLITS=${SPLITS:-1}
+LIST_MODE=${LIST_MODE:-false}
+
+# =============================================================================
+# Sample Definitions
+# Format: "path|deploy_command|test_command|watch_folders"
+# =============================================================================
+
+SCRIPT_SAMPLES=(
+    "samples/lambda-cloudfront/python|scripts/deploy.sh|scripts/test.sh|samples/lambda-cloudfront/python/scripts,samples/lambda-cloudfront/python/src"
+    "samples/lambda-s3-http/python|scripts/deploy.sh|scripts/test.sh|samples/lambda-s3-http/python/scripts,samples/lambda-s3-http/python/src"
+    "samples/web-app-dynamodb/python|scripts/deploy.sh|scripts/test.sh|samples/web-app-dynamodb/python/scripts,samples/web-app-dynamodb/python/src"
+    "samples/web-app-rds/python|scripts/deploy.sh|scripts/test.sh|samples/web-app-rds/python/scripts,samples/web-app-rds/python/src"
 )
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+TERRAFORM_SAMPLES=(
+    # Terraform samples can be added here
+    # "samples/lambda-cloudfront/python|terraform/deploy.sh|scripts/test.sh|samples/lambda-cloudfront/python/terraform,samples/lambda-cloudfront/python/src"
+)
 
-log_info() {
-  echo -e "${GREEN}[INFO]${NC} $1"
-}
+# Combine all samples
+ALL_SAMPLES=("${SCRIPT_SAMPLES[@]}" "${TERRAFORM_SAMPLES[@]}")
 
-log_warn() {
-  echo -e "${YELLOW}[WARN]${NC} $1"
-}
+# =============================================================================
+# List Mode - Output JSON for CI Matrix
+# =============================================================================
 
-log_error() {
-  echo -e "${RED}[ERROR]${NC} $1"
-}
+if [[ "$LIST_MODE" == "true" ]]; then
+    # Output compact JSON for GitHub Actions matrix
+    output="["
+    first=true
+    shard=1
+    for sample in "${ALL_SAMPLES[@]}"; do
+        IFS='|' read -r path deploy test watch_folders <<< "$sample"
+        name=$(basename "$(dirname "$path")")/$(basename "$path")
 
-# Print usage
-usage() {
-  cat <<EOF
-Usage: $0 [OPTIONS]
+        if [[ "$first" == "true" ]]; then
+            first=false
+        else
+            output+=","
+        fi
 
-Options:
-  --list              List all samples as JSON (for matrix generation)
-  --shard N           Run shard N (1-indexed)
-  --splits N          Total number of shards
-  --sample NAME       Run a specific sample by name
-  --help              Show this help message
-
-Examples:
-  $0 --list                     # List all samples for CI matrix
-  $0 --shard 1 --splits 5       # Run first shard of 5
-  $0 --sample lambda-function-urls-python  # Run specific sample
-EOF
-  exit 0
-}
-
-# List all samples as JSON for matrix generation
-list_samples() {
-  local json='{"include":['
-  local first=true
-  local idx=1
-  local total=${#SAMPLES[@]}
-
-  for sample_def in "${SAMPLES[@]}"; do
-    IFS='|' read -r path deploy_cmd test_cmd <<< "$sample_def"
-    local name=$(basename "$path")
-
-    if [ "$first" = true ]; then
-      first=false
-    else
-      json+=','
-    fi
-
-    json+="{\"shard\":$idx,\"splits\":$total,\"name\":\"$name\",\"path\":\"$path\"}"
-    ((idx++))
-  done
-
-  json+=']}'
-  echo "$json"
-}
-
-# Get samples for a specific shard
-get_shard_samples() {
-  local shard=$1
-  local splits=$2
-  local total=${#SAMPLES[@]}
-  local samples_per_shard=$(( (total + splits - 1) / splits ))
-  local start_idx=$(( (shard - 1) * samples_per_shard ))
-  local end_idx=$(( start_idx + samples_per_shard ))
-
-  if [ $end_idx -gt $total ]; then
-    end_idx=$total
-  fi
-
-  for ((i=start_idx; i<end_idx; i++)); do
-    echo "${SAMPLES[$i]}"
-  done
-}
-
-# Cleanup resources between tests
-cleanup() {
-  log_info "Cleaning up resources..."
-
-  # Clean up CloudFormation stacks
-  for stack in $(awslocal cloudformation list-stacks --stack-status-filter CREATE_COMPLETE UPDATE_COMPLETE --query 'StackSummaries[].StackName' --output text 2>/dev/null || true); do
-    log_info "Deleting stack: $stack"
-    awslocal cloudformation delete-stack --stack-name "$stack" 2>/dev/null || true
-  done
-
-  # Clean Terraform state
-  rm -rf .terraform terraform.tfstate* .terraform.lock.hcl 2>/dev/null || true
-
-  # Clean CDK state
-  rm -rf cdk.out 2>/dev/null || true
-
-  # Clean SAM state
-  rm -rf .aws-sam 2>/dev/null || true
-
-  log_info "Cleanup complete"
-}
-
-# Run a single sample
-run_sample() {
-  local sample_def=$1
-  IFS='|' read -r path deploy_cmd test_cmd <<< "$sample_def"
-  local name=$(basename "$path")
-
-  log_info "=========================================="
-  log_info "Running sample: $name"
-  log_info "Path: $path"
-  log_info "=========================================="
-
-  # Change to sample directory
-  if [ ! -d "$path" ]; then
-    log_error "Sample directory not found: $path"
-    return 1
-  fi
-
-  pushd "$path" > /dev/null
-
-  # Deploy
-  log_info "Deploying: $deploy_cmd"
-  if ! eval "$deploy_cmd"; then
-    log_error "Deploy failed for $name"
-    popd > /dev/null
-    return 1
-  fi
-
-  # Test (if defined)
-  if [ -n "$test_cmd" ]; then
-    log_info "Testing: $test_cmd"
-    if ! eval "$test_cmd"; then
-      log_error "Test failed for $name"
-      popd > /dev/null
-      return 1
-    fi
-  fi
-
-  log_info "Sample $name completed successfully"
-  popd > /dev/null
-
-  return 0
-}
-
-# Find sample by name
-find_sample() {
-  local name=$1
-  for sample_def in "${SAMPLES[@]}"; do
-    IFS='|' read -r path deploy_cmd test_cmd <<< "$sample_def"
-    local sample_name=$(basename "$path")
-    if [ "$sample_name" = "$name" ]; then
-      echo "$sample_def"
-      return 0
-    fi
-  done
-  return 1
-}
-
-# Main
-main() {
-  local mode=""
-  local shard=""
-  local splits=""
-  local sample_name=""
-
-  while [[ $# -gt 0 ]]; do
-    case $1 in
-      --list)
-        mode="list"
-        shift
-        ;;
-      --shard)
-        shard="$2"
-        shift 2
-        ;;
-      --splits)
-        splits="$2"
-        shift 2
-        ;;
-      --sample)
-        sample_name="$2"
-        shift 2
-        ;;
-      --help)
-        usage
-        ;;
-      *)
-        log_error "Unknown option: $1"
-        usage
-        ;;
-    esac
-  done
-
-  if [ "$mode" = "list" ]; then
-    list_samples
+        output+="{\"shard\":$shard,\"splits\":${#ALL_SAMPLES[@]},\"name\":\"$name\",\"path\":\"$path\",\"watch_folders\":\"$watch_folders\"}"
+        ((shard++))
+    done
+    output+="]"
+    echo "$output"
     exit 0
-  fi
+fi
 
-  if [ -n "$sample_name" ]; then
-    sample_def=$(find_sample "$sample_name")
-    if [ -z "$sample_def" ]; then
-      log_error "Sample not found: $sample_name"
-      exit 1
+# =============================================================================
+# Tool Verification
+# =============================================================================
+
+check_tool() {
+    if ! command -v "$1" &> /dev/null; then
+        echo "Error: $1 is required but not installed."
+        exit 1
     fi
-    run_sample "$sample_def"
-    exit $?
-  fi
+}
 
-  if [ -n "$shard" ] && [ -n "$splits" ]; then
-    log_info "Running shard $shard of $splits"
-    failed=0
-    while IFS= read -r sample_def; do
-      if ! run_sample "$sample_def"; then
-        ((failed++))
-      fi
-    done < <(get_shard_samples "$shard" "$splits")
+echo "Verifying required tools..."
+check_tool docker
+check_tool aws
+check_tool jq
 
-    if [ $failed -gt 0 ]; then
-      log_error "$failed sample(s) failed"
-      exit 1
-    fi
-    exit 0
-  fi
+# Check for awslocal
+if ! command -v awslocal &> /dev/null; then
+    echo "Warning: awslocal not found, using 'aws --endpoint-url=http://localhost:4566'"
+    AWS="aws --endpoint-url=http://localhost:4566"
+else
+    AWS="awslocal"
+fi
 
-  # Run all samples if no specific option given
-  log_info "Running all samples"
-  failed=0
-  for sample_def in "${SAMPLES[@]}"; do
-    if ! run_sample "$sample_def"; then
-      ((failed++))
-    fi
-  done
+# =============================================================================
+# Environment Setup
+# =============================================================================
 
-  if [ $failed -gt 0 ]; then
-    log_error "$failed sample(s) failed"
+# Load .env if present
+if [[ -f .env ]]; then
+    echo "Loading .env file..."
+    set -a
+    source .env
+    set +a
+fi
+
+# Configure AWS CLI for LocalStack
+export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-test}
+export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-test}
+export AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+
+# =============================================================================
+# LocalStack Health Check
+# =============================================================================
+
+wait_for_localstack() {
+    echo "Waiting for LocalStack to be ready..."
+    local max_attempts=30
+    local attempt=1
+
+    while [[ $attempt -le $max_attempts ]]; do
+        if curl -s http://localhost:4566/_localstack/health | jq -e '.services' > /dev/null 2>&1; then
+            echo "LocalStack is ready!"
+            return 0
+        fi
+        echo "Attempt $attempt/$max_attempts - waiting..."
+        sleep 2
+        ((attempt++))
+    done
+
+    echo "Error: LocalStack did not become ready in time"
     exit 1
-  fi
-
-  log_info "All samples completed successfully"
 }
 
-main "$@"
+# Check if LocalStack is running
+if ! curl -s http://localhost:4566/_localstack/health > /dev/null 2>&1; then
+    echo "LocalStack is not running. Please start it first:"
+    echo "  docker run -d --name localstack -p 4566:4566 -e LOCALSTACK_AUTH_TOKEN localstack/localstack-pro"
+    exit 1
+fi
+
+wait_for_localstack
+
+# =============================================================================
+# Calculate Shard Range
+# =============================================================================
+
+total_samples=${#ALL_SAMPLES[@]}
+samples_per_shard=$(( (total_samples + SPLITS - 1) / SPLITS ))
+start_index=$(( (SHARD - 1) * samples_per_shard ))
+end_index=$(( start_index + samples_per_shard ))
+
+if [[ $end_index -gt $total_samples ]]; then
+    end_index=$total_samples
+fi
+
+echo "Running shard $SHARD of $SPLITS (samples $((start_index + 1)) to $end_index of $total_samples)"
+
+# =============================================================================
+# Run Tests
+# =============================================================================
+
+failed_samples=()
+passed_samples=()
+
+for ((i = start_index; i < end_index; i++)); do
+    sample="${ALL_SAMPLES[$i]}"
+    IFS='|' read -r path deploy test watch_folders <<< "$sample"
+
+    sample_name=$(basename "$(dirname "$path")")/$(basename "$path")
+    echo ""
+    echo "============================================================================="
+    echo "Running: $sample_name"
+    echo "============================================================================="
+
+    cd "$path" || continue
+
+    # Deploy
+    echo "Deploying..."
+    if ! bash "$deploy"; then
+        echo "ERROR: Deployment failed for $sample_name"
+        failed_samples+=("$sample_name")
+        cd - > /dev/null
+        continue
+    fi
+
+    # Test
+    echo "Testing..."
+    if ! bash "$test"; then
+        echo "ERROR: Tests failed for $sample_name"
+        failed_samples+=("$sample_name")
+    else
+        echo "SUCCESS: $sample_name passed"
+        passed_samples+=("$sample_name")
+    fi
+
+    cd - > /dev/null
+
+    # Cleanup between tests
+    echo "Cleaning up..."
+    docker system prune -f > /dev/null 2>&1 || true
+done
+
+# =============================================================================
+# Summary
+# =============================================================================
+
+echo ""
+echo "============================================================================="
+echo "Test Summary"
+echo "============================================================================="
+echo "Passed: ${#passed_samples[@]}"
+for sample in "${passed_samples[@]}"; do
+    echo "  - $sample"
+done
+
+if [[ ${#failed_samples[@]} -gt 0 ]]; then
+    echo ""
+    echo "Failed: ${#failed_samples[@]}"
+    for sample in "${failed_samples[@]}"; do
+        echo "  - $sample"
+    done
+    exit 1
+fi
+
+echo ""
+echo "All tests passed!"

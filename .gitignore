@@ -1,32 +1,60 @@
-node_modules/
-.serverless/
-.gradle/
-.classpath
-.project
-.settings/
-target/
-volume/
-
-.idea/
-
+# Python
 __pycache__/
-
-*.log
-
-.terraform/
-terraform.tfstate*
-.terraform.lock*
-
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
 .venv/
-testdata/
+env/
+.env
+*.egg-info/
+.eggs/
+dist/
+build/
 
-*.vmdk
-*.vdi
-*.7z
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+*.tfplan
+
+# SAM
+.aws-sam/
+samconfig.toml
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# LocalStack
+volume/
+.localstack/
+
+# Logs
+*.log
+logs/
+
+# Build artifacts
 *.zip
-!lambda.zip
+*.jar
+target/
 
-glacier-s3-select/*result.csv
-azure-functions/.python_packages/
-
-*/logs.txt
+# Credentials (never commit)
+credentials
+.aws/
