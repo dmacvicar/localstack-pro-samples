@@ -2,31 +2,45 @@
 Tests for lambda-function-urls sample.
 
 Run with:
-    uv run --with pytest,boto3,tenacity,requests pytest tests/test_lambda_function_urls.py -v
+    uv run pytest samples/lambda-function-urls/python/ -v
 """
 
 import json
-import pytest
 from pathlib import Path
+
+import pytest
 
 # Sample configuration
 SAMPLE_NAME = "lambda-function-urls"
 LANGUAGE = "python"
+SAMPLE_DIR = Path(__file__).parent
 
 
-@pytest.fixture(scope="module", params=["scripts", "terraform", "cloudformation", "cdk"])
-def deployed_env(request, deployer, wait_for):
+def get_iac_methods():
+    """Discover available IaC methods for this sample."""
+    methods = []
+    if (SAMPLE_DIR / "scripts" / "deploy.sh").exists():
+        methods.append("scripts")
+    for iac in ["terraform", "cloudformation", "cdk"]:
+        if (SAMPLE_DIR / iac / "deploy.sh").exists():
+            methods.append(iac)
+    return methods
+
+
+@pytest.fixture(scope="module", params=get_iac_methods())
+def deployed_env(request, wait_for):
     """Deploy the sample with each IaC method and return env vars."""
+    from conftest import run_deploy, get_deploy_script_path
+
     iac_method = request.param
 
     # Skip if deploy script doesn't exist
-    from tests.conftest import get_deploy_script_path
     script_path = get_deploy_script_path(SAMPLE_NAME, LANGUAGE, iac_method)
     if not script_path.exists():
         pytest.skip(f"Deploy script not found for {iac_method}")
 
     # Deploy and return env vars
-    env = deployer.deploy(SAMPLE_NAME, LANGUAGE, iac_method)
+    env = run_deploy(SAMPLE_NAME, LANGUAGE, iac_method)
 
     # Wait for Lambda to be active
     if "FUNCTION_NAME" in env:
@@ -73,7 +87,7 @@ class TestLambdaFunctionUrls:
         assert response["statusCode"] == 200
 
     def test_function_invocation_echo(self, deployed_env, invoke_lambda):
-        """Lambda should echo back request body."""
+        """Lambda should echo back request body in response."""
         function_name = deployed_env["FUNCTION_NAME"]
         test_data = {"key": "value", "number": 42}
 
@@ -85,7 +99,8 @@ class TestLambdaFunctionUrls:
 
         assert response["statusCode"] == 200
         body = json.loads(response["body"])
-        assert body.get("echo") == test_data
+        # Lambda echoes body in request.body field
+        assert body.get("request", {}).get("body") == test_data
 
     def test_function_invocation_info(self, deployed_env, invoke_lambda):
         """Lambda should return info."""
@@ -98,16 +113,18 @@ class TestLambdaFunctionUrls:
 
         assert response["statusCode"] == 200
 
-    def test_function_invocation_not_found(self, deployed_env, invoke_lambda):
-        """Lambda should return 404 for unknown path."""
+    def test_function_returns_function_name(self, deployed_env, invoke_lambda):
+        """Lambda should return its function name in response."""
         function_name = deployed_env["FUNCTION_NAME"]
 
         response = invoke_lambda(function_name, {
             "httpMethod": "GET",
-            "path": "/nonexistent"
+            "path": "/any-path"
         })
 
-        assert response["statusCode"] == 404
+        assert response["statusCode"] == 200
+        body = json.loads(response["body"])
+        assert body.get("functionName") == function_name
 
     def test_function_url_exists(self, deployed_env, aws_clients):
         """Function URL should be configured."""

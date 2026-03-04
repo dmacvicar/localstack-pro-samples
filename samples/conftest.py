@@ -2,7 +2,10 @@
 Shared pytest fixtures for LocalStack Pro Samples.
 
 Run from project root:
-    uv run --with pytest,boto3,tenacity,requests pytest tests/
+    uv run pytest samples/
+
+Run a specific sample:
+    uv run pytest samples/lambda-function-urls/python/ -v
 
 Tests are parameterized by sample and IaC method (scripts, terraform, cloudformation, cdk).
 """
@@ -12,14 +15,12 @@ import os
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 import boto3
 import pytest
 import requests
 from tenacity import (
     retry,
-    retry_if_exception_type,
     stop_after_delay,
     wait_fixed,
 )
@@ -34,47 +35,7 @@ AWS_REGION = os.environ.get("AWS_DEFAULT_REGION", "us-east-1")
 AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID", "test")
 AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY", "test")
 
-PROJECT_ROOT = Path(__file__).parent.parent
-SAMPLES_DIR = PROJECT_ROOT / "samples"
-
-
-# =============================================================================
-# Sample Discovery
-# =============================================================================
-
-def discover_samples() -> list[tuple[str, str, str]]:
-    """
-    Discover all samples and their IaC methods.
-
-    Returns:
-        List of (sample_name, language, iac_method) tuples
-        e.g., [("lambda-function-urls", "python", "scripts"),
-               ("lambda-function-urls", "python", "terraform"), ...]
-    """
-    samples = []
-
-    for sample_dir in sorted(SAMPLES_DIR.iterdir()):
-        if not sample_dir.is_dir() or sample_dir.name.startswith("."):
-            continue
-
-        sample_name = sample_dir.name
-
-        for lang_dir in sorted(sample_dir.iterdir()):
-            if not lang_dir.is_dir():
-                continue
-
-            language = lang_dir.name
-
-            # Check for scripts/ deploy
-            if (lang_dir / "scripts" / "deploy.sh").exists():
-                samples.append((sample_name, language, "scripts"))
-
-            # Check for IaC methods
-            for iac_method in ["terraform", "cloudformation", "cdk"]:
-                if (lang_dir / iac_method / "deploy.sh").exists():
-                    samples.append((sample_name, language, iac_method))
-
-    return samples
+SAMPLES_DIR = Path(__file__).parent
 
 
 # =============================================================================
@@ -146,6 +107,26 @@ class AWSClients:
     def ecr_client(self):
         return self._client("ecr")
 
+    @property
+    def apigateway_client(self):
+        return self._client("apigateway")
+
+    @property
+    def apigatewayv2_client(self):
+        return self._client("apigatewayv2")
+
+    @property
+    def acm_client(self):
+        return self._client("acm")
+
+    @property
+    def route53_client(self):
+        return self._client("route53")
+
+    @property
+    def cloudfront_client(self):
+        return self._client("cloudfront")
+
 
 @pytest.fixture(scope="session")
 def aws_clients() -> AWSClients:
@@ -202,6 +183,19 @@ class WaitFor:
             raise Exception("LocalStack not ready")
         return data
 
+    @retry(wait=wait_fixed(2), stop=stop_after_delay(120), reraise=True)
+    def ecs_service_running(self, cluster: str, service: str) -> dict:
+        """Wait for ECS service to have running tasks."""
+        response = self.clients.ecs_client.describe_services(
+            cluster=cluster, services=[service]
+        )
+        if not response["services"]:
+            raise Exception(f"Service {service} not found")
+        svc = response["services"][0]
+        if svc["runningCount"] < 1:
+            raise Exception(f"Service has {svc['runningCount']} running tasks")
+        return response
+
 
 @pytest.fixture(scope="session")
 def wait_for(aws_clients: AWSClients) -> WaitFor:
@@ -227,12 +221,17 @@ def load_env_file(env_path: Path) -> dict:
 
 
 # =============================================================================
-# Deployment
+# Deployment Helpers
 # =============================================================================
+
+def get_sample_dir(sample_name: str, language: str) -> Path:
+    """Get the path to a sample directory."""
+    return SAMPLES_DIR / sample_name / language
+
 
 def get_deploy_script_path(sample_name: str, language: str, iac_method: str) -> Path:
     """Get the path to the deploy script for a sample/iac combination."""
-    sample_dir = SAMPLES_DIR / sample_name / language
+    sample_dir = get_sample_dir(sample_name, language)
 
     if iac_method == "scripts":
         return sample_dir / "scripts" / "deploy.sh"
@@ -240,54 +239,38 @@ def get_deploy_script_path(sample_name: str, language: str, iac_method: str) -> 
         return sample_dir / iac_method / "deploy.sh"
 
 
-def get_test_script_path(sample_name: str, language: str, iac_method: str) -> Path:
-    """Get the path to the test script for a sample."""
-    sample_dir = SAMPLES_DIR / sample_name / language
-    return sample_dir / "scripts" / "test.sh"
-
-
-def get_env_path(sample_name: str, language: str, iac_method: str) -> Path:
+def get_env_path(sample_name: str, language: str) -> Path:
     """Get the path to the .env file after deployment."""
-    sample_dir = SAMPLES_DIR / sample_name / language
-    return sample_dir / "scripts" / ".env"
+    return get_sample_dir(sample_name, language) / "scripts" / ".env"
 
 
-@pytest.fixture(scope="session")
-def deployer():
-    """Returns a deployment helper class."""
+def run_deploy(sample_name: str, language: str, iac_method: str, timeout: int = 300) -> dict:
+    """
+    Run deployment and return env vars.
 
-    class Deployer:
-        def deploy(
-            self, sample_name: str, language: str, iac_method: str, timeout: int = 300
-        ) -> dict:
-            """
-            Run deployment and return env vars.
+    Returns:
+        Dict of environment variables from .env
+    """
+    script_path = get_deploy_script_path(sample_name, language, iac_method)
 
-            Returns:
-                Dict of environment variables from .env
-            """
-            script_path = get_deploy_script_path(sample_name, language, iac_method)
+    if not script_path.exists():
+        raise FileNotFoundError(f"Deploy script not found: {script_path}")
 
-            if not script_path.exists():
-                raise FileNotFoundError(f"Deploy script not found: {script_path}")
+    result = subprocess.run(
+        ["bash", str(script_path)],
+        cwd=script_path.parent,
+        capture_output=True,
+        text=True,
+        timeout=timeout,
+    )
 
-            result = subprocess.run(
-                ["bash", str(script_path)],
-                cwd=script_path.parent,
-                capture_output=True,
-                text=True,
-                timeout=timeout,
-            )
+    if result.returncode != 0:
+        raise RuntimeError(
+            f"Deployment failed:\nstdout: {result.stdout}\nstderr: {result.stderr}"
+        )
 
-            if result.returncode != 0:
-                raise RuntimeError(
-                    f"Deployment failed:\nstdout: {result.stdout}\nstderr: {result.stderr}"
-                )
-
-            env_path = get_env_path(sample_name, language, iac_method)
-            return load_env_file(env_path)
-
-    return Deployer()
+    env_path = get_env_path(sample_name, language)
+    return load_env_file(env_path)
 
 
 # =============================================================================

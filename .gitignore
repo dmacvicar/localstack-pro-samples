@@ -55,6 +55,16 @@ logs/
 *.jar
 target/
 
+# CDK
+cdk.out/
+cdk-outputs.json
+
+# Serverless
+.serverless/
+
+# uv
+uv.lock
+
 # Credentials (never commit)
 credentials
 .aws/

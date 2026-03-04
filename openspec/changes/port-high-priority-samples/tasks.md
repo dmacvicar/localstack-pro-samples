@@ -60,19 +60,29 @@ Adding Terraform, CloudFormation, and CDK deployment methods:
 
 Migrating from bash tests to pytest for better assertions and retry handling:
 
-- [x] Create `tests/conftest.py` with shared fixtures
+- [x] Create shared fixtures in `samples/conftest.py`
 - [x] Add sample discovery for test matrix (sample × IaC method)
-- [x] Add AWS client fixtures
+- [x] Add AWS client fixtures (Lambda, DynamoDB, S3, SQS, Step Functions, ECS, ECR, etc.)
 - [x] Add tenacity-based wait/retry utilities
-- [ ] Convert sample tests to pytest
-- [ ] Update run-samples.sh to use pytest
+- [x] Move tests inside samples (not separate tests/ dir)
+- [x] Add test dependencies to pyproject.toml (run with `uv run pytest`)
+- [x] Convert all 8 Python samples to pytest:
+  - [x] lambda-function-urls/python - 7 tests × IaC methods
+  - [x] stepfunctions-lambda/python - 10 tests × IaC methods
+  - [x] web-app-dynamodb/python - 8 tests × IaC methods
+  - [x] lambda-s3-http/python - 11 tests × IaC methods
+  - [x] lambda-cloudfront/python - 4 tests × IaC methods
+  - [x] web-app-rds/python - 7 tests × IaC methods
+  - [x] apigw-custom-domain/python - 7 tests × IaC methods
+  - [x] ecs-ecr-app/python - 6 tests × IaC methods
+- [ ] Update run-samples.sh to use pytest (optional)
 
 ## To Do
 
-- [ ] Complete pytest migration for all samples
 - [ ] Add remaining IaC methods to samples
 - [ ] Port additional samples from original repo (Phase 2)
 
 ## CI Status
 
 10 base samples + 4 Terraform + 3 CloudFormation + 3 CDK = 20 deployable targets.
+164 pytest tests discovered (tests × IaC method combinations).

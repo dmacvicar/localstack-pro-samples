@@ -6,62 +6,66 @@ on:
   push:
     branches: [main, master]
   workflow_dispatch:
-    inputs:
-      run_mode:
-        description: 'Run mode: all or changed'
-        required: false
-        default: 'all'
-        type: choice
-        options:
-          - all
-          - changed
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  DEFAULT_RUN_MODE: 'changed'
-
 jobs:
-  setup:
-    name: Build Test Matrix
+  discover:
+    name: Discover tests
     runs-on: ubuntu-latest
     outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
-      has_tests: ${{ steps.set-matrix.outputs.has_tests }}
+      matrix: ${{ steps.discover.outputs.matrix }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Build matrix
-        id: set-matrix
-        env:
-          # Use 'all' for pushes to master/main, 'changed' for PRs
-          RUN_MODE: ${{ github.event.inputs.run_mode || (github.event_name == 'push' && 'all' || env.DEFAULT_RUN_MODE) }}
+      - name: Discover sample × IaC combinations
+        id: discover
         run: |
-          matrix=$(.github/scripts/build-matrix.sh)
-          echo "Matrix: $matrix"
+          # Build matrix of sample × IaC method combinations
+          matrix="["
+          first=true
 
-          # Check if matrix is empty
-          if [[ "$matrix" == "[]" ]] || [[ -z "$matrix" ]]; then
-            echo "has_tests=false" >> $GITHUB_OUTPUT
-            echo "matrix={\"include\":[]}" >> $GITHUB_OUTPUT
-          else
-            echo "has_tests=true" >> $GITHUB_OUTPUT
-            echo "matrix={\"include\":$matrix}" >> $GITHUB_OUTPUT
-          fi
+          for sample_dir in samples/*/; do
+            sample=$(basename "$sample_dir")
+
+            for lang_dir in "$sample_dir"*/; do
+              [ -d "$lang_dir" ] || continue
+              lang=$(basename "$lang_dir")
+
+              # Check for scripts deploy
+              if [ -f "$lang_dir/scripts/deploy.sh" ]; then
+                $first || matrix+=","
+                first=false
+                matrix+="{\"sample\":\"$sample\",\"language\":\"$lang\",\"iac\":\"scripts\"}"
+              fi
+
+              # Check for IaC methods
+              for iac in terraform cloudformation cdk; do
+                if [ -f "$lang_dir/$iac/deploy.sh" ]; then
+                  $first || matrix+=","
+                  first=false
+                  matrix+="{\"sample\":\"$sample\",\"language\":\"$lang\",\"iac\":\"$iac\"}"
+                fi
+              done
+            done
+          done
+
+          matrix+="]"
+          echo "matrix=$matrix" >> $GITHUB_OUTPUT
+          echo "Discovered tests: $matrix"
 
   test:
-    name: 'Test: ${{ matrix.name }}'
-    needs: setup
-    if: needs.setup.outputs.has_tests == 'true'
+    name: ${{ matrix.sample }}/${{ matrix.language }} (${{ matrix.iac }})
+    needs: discover
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
+      matrix:
+        include: ${{ fromJson(needs.discover.outputs.matrix) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -82,6 +86,7 @@ jobs:
           sudo apt-get install -y jq zip unzip curl
 
       - name: Install Terraform
+        if: matrix.iac == 'terraform'
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: '1.5.0'
@@ -93,16 +98,16 @@ jobs:
         run: |
           uv tool install awscli
           uv tool install awscli-local
-          aws --version
-          awslocal --version
+
+      - name: Install CDK
+        if: matrix.iac == 'cdk'
+        run: npm install -g aws-cdk-local aws-cdk
 
       - name: Install test dependencies
-        run: |
-          uv venv .venv
-          uv pip install -r requirements-dev.txt
+        run: uv sync
 
       - name: Login to Docker Hub
-        if: ${{ env.DOCKERHUB_USERNAME != '' }}
+        if: env.DOCKERHUB_USERNAME != ''
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -131,21 +136,22 @@ jobs:
             -v /var/run/docker.sock:/var/run/docker.sock \
             localstack/localstack-pro:latest
 
-          # Wait for LocalStack to be ready
           echo "Waiting for LocalStack..."
           timeout 60 bash -c 'until curl -s http://localhost:4566/_localstack/health | jq -e ".services" > /dev/null 2>&1; do sleep 2; done'
           echo "LocalStack is ready!"
 
-      - name: Run test
+      - name: Run pytest for ${{ matrix.sample }} (${{ matrix.iac }})
         env:
           AWS_ACCESS_KEY_ID: test
           AWS_SECRET_ACCESS_KEY: test
           AWS_DEFAULT_REGION: us-east-1
         run: |
-          ./run-samples.sh SHARD=${{ matrix.shard }} SPLITS=${{ matrix.splits }}
+          uv run pytest "samples/${{ matrix.sample }}/${{ matrix.language }}/" \
+            -v --tb=short \
+            -k "${{ matrix.iac }}"
 
       - name: Capture LocalStack logs
-        if: always()
+        if: failure()
         run: |
           docker logs localstack > localstack.log 2>&1 || true
           echo "=== LocalStack Logs (last 100 lines) ==="
@@ -155,26 +161,6 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: localstack-logs-${{ matrix.shard }}
+          name: logs-${{ matrix.sample }}-${{ matrix.iac }}
           path: localstack.log
           retention-days: 7
-
-  summary:
-    name: Test Summary
-    needs: [setup, test]
-    if: always()
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check results
-        run: |
-          if [[ "${{ needs.setup.outputs.has_tests }}" == "false" ]]; then
-            echo "No tests were run (no matching changes found)"
-            exit 0
-          fi
-
-          if [[ "${{ needs.test.result }}" == "failure" ]]; then
-            echo "Some tests failed"
-            exit 1
-          fi
-
-          echo "All tests passed!"
