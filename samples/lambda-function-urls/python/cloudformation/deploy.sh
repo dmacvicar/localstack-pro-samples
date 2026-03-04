@@ -14,12 +14,8 @@ echo "Deploying Lambda Function URL Sample via CloudFormation"
 echo "  Stack: $STACK_NAME"
 echo "  Region: $REGION"
 
-# Determine CLI to use
-if command -v awslocal &> /dev/null; then
-    AWS="awslocal"
-else
-    AWS="aws --endpoint-url=http://localhost:4566"
-fi
+# Use aws CLI directly with endpoint-url to avoid awslocal --s3-endpoint-url bug
+AWS="aws --endpoint-url=http://localhost:4566"
 
 cd "$SCRIPT_DIR"
 
