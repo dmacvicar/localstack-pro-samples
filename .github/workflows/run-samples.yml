@@ -90,14 +90,16 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: '1.5.0'
+          terraform_wrapper: false
 
       - name: Install uv
         uses: astral-sh/setup-uv@v5
 
-      - name: Install AWS CLI and awslocal
+      - name: Install AWS CLI and LocalStack tools
         run: |
           uv tool install awscli
           uv tool install awscli-local
+          uv tool install terraform-local
 
       - name: Install CDK
         if: matrix.iac == 'cdk'
