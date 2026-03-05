@@ -77,6 +77,14 @@ Migrating from bash tests to pytest for better assertions and retry handling:
   - [x] ecs-ecr-app/python - 6 tests × IaC methods
 - [ ] Update run-samples.sh to use pytest (optional)
 
+## Completed (Phase 2)
+
+- [x] `lambda-container-image` → `samples/lambda-container-image/python`
+  - [x] Create directory structure with Dockerfile and handler.py
+  - [x] Write scripts/deploy.sh (ECR, Docker build/push, Lambda create)
+  - [x] Write pytest tests (6 tests)
+  - [x] All tests pass
+
 ## To Do
 
 - [ ] Add remaining IaC methods to samples
