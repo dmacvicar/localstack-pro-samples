@@ -1,5 +1,5 @@
 """
-Tests for apigw-websockets sample (JavaScript/Serverless).
+Tests for apigw-websockets sample (JavaScript).
 
 Run with:
     uv run pytest samples/apigw-websockets/javascript/ -v
@@ -15,6 +15,14 @@ SAMPLE_NAME = "apigw-websockets"
 LANGUAGE = "javascript"
 SAMPLE_DIR = Path(__file__).parent
 
+# Function name patterns per IaC method
+FUNCTION_NAME_PATTERNS = {
+    "scripts": "apigw-websockets-sample-{stage}-{handler}",
+    "terraform": "apigw-websockets-tf-{handler}",
+    "cloudformation": "apigw-websockets-cfn-{handler}",
+    "cdk": "apigw-websockets-cdk-{handler}",
+}
+
 
 def get_iac_methods():
     """Discover available IaC methods for this sample."""
@@ -25,6 +33,12 @@ def get_iac_methods():
         if (SAMPLE_DIR / iac / "deploy.sh").exists():
             methods.append(iac)
     return methods
+
+
+def get_function_name(iac_method: str, handler: str, stage: str = "local") -> str:
+    """Get the function name for the given IaC method and handler."""
+    pattern = FUNCTION_NAME_PATTERNS.get(iac_method, FUNCTION_NAME_PATTERNS["scripts"])
+    return pattern.format(stage=stage, handler=handler)
 
 
 @pytest.fixture(scope="module", params=get_iac_methods())
@@ -39,6 +53,7 @@ def deployed_env(request, wait_for):
         pytest.skip(f"Deploy script not found for {iac_method}")
 
     env = run_deploy(SAMPLE_NAME, LANGUAGE, iac_method)
+    env["IAC_METHOD"] = iac_method
 
     return env
 
@@ -54,22 +69,25 @@ class TestApiGwWebsockets:
 
     def test_connection_handler_active(self, deployed_env, aws_clients):
         """Connection handler Lambda should be active."""
-        stage = deployed_env.get("STAGE", "dev")
-        function_name = f"apigw-websockets-sample-{stage}-connectionHandler"
+        iac_method = deployed_env.get("IAC_METHOD", "scripts")
+        stage = deployed_env.get("STAGE", "local")
+        function_name = get_function_name(iac_method, "connectionHandler", stage)
         response = aws_clients.lambda_client.get_function(FunctionName=function_name)
         assert response["Configuration"]["State"] == "Active"
 
     def test_default_handler_active(self, deployed_env, aws_clients):
         """Default handler Lambda should be active."""
-        stage = deployed_env.get("STAGE", "dev")
-        function_name = f"apigw-websockets-sample-{stage}-defaultHandler"
+        iac_method = deployed_env.get("IAC_METHOD", "scripts")
+        stage = deployed_env.get("STAGE", "local")
+        function_name = get_function_name(iac_method, "defaultHandler", stage)
         response = aws_clients.lambda_client.get_function(FunctionName=function_name)
         assert response["Configuration"]["State"] == "Active"
 
     def test_action_handler_active(self, deployed_env, aws_clients):
         """Action handler Lambda should be active."""
-        stage = deployed_env.get("STAGE", "dev")
-        function_name = f"apigw-websockets-sample-{stage}-actionHandler"
+        iac_method = deployed_env.get("IAC_METHOD", "scripts")
+        stage = deployed_env.get("STAGE", "local")
+        function_name = get_function_name(iac_method, "actionHandler", stage)
         response = aws_clients.lambda_client.get_function(FunctionName=function_name)
         assert response["Configuration"]["State"] == "Active"
 

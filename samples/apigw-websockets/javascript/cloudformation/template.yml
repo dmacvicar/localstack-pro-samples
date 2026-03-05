@@ -1,0 +1,200 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: API Gateway WebSockets Sample
+
+Parameters:
+  ApiName:
+    Type: String
+    Default: apigw-websockets-cfn
+  S3Bucket:
+    Type: String
+    Description: S3 bucket containing the deployment artifacts
+  FunctionS3Key:
+    Type: String
+    Description: S3 key for the function zip
+
+Resources:
+  # IAM Role for Lambda
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${ApiName}-lambda-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  # Lambda Functions
+  ConnectionHandler:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub '${ApiName}-connectionHandler'
+      Role: !GetAtt LambdaRole.Arn
+      Handler: handler.handler
+      Runtime: nodejs18.x
+      Timeout: 30
+      MemorySize: 128
+      Code:
+        S3Bucket: !Ref S3Bucket
+        S3Key: !Ref FunctionS3Key
+
+  DefaultHandler:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub '${ApiName}-defaultHandler'
+      Role: !GetAtt LambdaRole.Arn
+      Handler: handler.handler
+      Runtime: nodejs18.x
+      Timeout: 30
+      MemorySize: 128
+      Code:
+        S3Bucket: !Ref S3Bucket
+        S3Key: !Ref FunctionS3Key
+
+  ActionHandler:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub '${ApiName}-actionHandler'
+      Role: !GetAtt LambdaRole.Arn
+      Handler: handler.handler
+      Runtime: nodejs18.x
+      Timeout: 30
+      MemorySize: 128
+      Code:
+        S3Bucket: !Ref S3Bucket
+        S3Key: !Ref FunctionS3Key
+
+  # WebSocket API
+  WebSocketApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Ref ApiName
+      ProtocolType: WEBSOCKET
+      RouteSelectionExpression: '$request.body.action'
+
+  # Integrations
+  ConnectionIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ConnectionHandler.Arn}/invocations'
+      IntegrationMethod: POST
+
+  DefaultIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DefaultHandler.Arn}/invocations'
+      IntegrationMethod: POST
+
+  ActionIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ActionHandler.Arn}/invocations'
+      IntegrationMethod: POST
+
+  # Routes
+  ConnectRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketApi
+      RouteKey: '$connect'
+      Target: !Sub 'integrations/${ConnectionIntegration}'
+
+  DisconnectRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketApi
+      RouteKey: '$disconnect'
+      Target: !Sub 'integrations/${ConnectionIntegration}'
+
+  DefaultRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketApi
+      RouteKey: '$default'
+      Target: !Sub 'integrations/${DefaultIntegration}'
+      RouteResponseSelectionExpression: '$default'
+
+  ActionRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketApi
+      RouteKey: 'test-action'
+      Target: !Sub 'integrations/${ActionIntegration}'
+      RouteResponseSelectionExpression: '$default'
+
+  # Route Responses
+  DefaultRouteResponse:
+    Type: AWS::ApiGatewayV2::RouteResponse
+    Properties:
+      ApiId: !Ref WebSocketApi
+      RouteId: !Ref DefaultRoute
+      RouteResponseKey: '$default'
+
+  ActionRouteResponse:
+    Type: AWS::ApiGatewayV2::RouteResponse
+    Properties:
+      ApiId: !Ref WebSocketApi
+      RouteId: !Ref ActionRoute
+      RouteResponseKey: '$default'
+
+  # Lambda Permissions
+  ConnectionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ConnectionHandler
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/*/*'
+
+  DefaultPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref DefaultHandler
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/*/*'
+
+  ActionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ActionHandler
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/*/*'
+
+  # Stage
+  ProdStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref WebSocketApi
+      StageName: prod
+      AutoDeploy: true
+    DependsOn:
+      - ConnectRoute
+      - DisconnectRoute
+      - DefaultRoute
+      - ActionRoute
+
+Outputs:
+  ApiId:
+    Value: !Ref WebSocketApi
+  ApiEndpoint:
+    Value: !GetAtt WebSocketApi.ApiEndpoint
+  StageName:
+    Value: !Ref ProdStage
+  ConnectionHandlerName:
+    Value: !Ref ConnectionHandler
+  DefaultHandlerName:
+    Value: !Ref DefaultHandler
+  ActionHandlerName:
+    Value: !Ref ActionHandler
