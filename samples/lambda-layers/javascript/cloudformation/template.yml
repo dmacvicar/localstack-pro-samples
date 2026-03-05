@@ -1,0 +1,74 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Lambda Layers Sample
+
+Parameters:
+  FunctionName:
+    Type: String
+    Default: lambda-layers-cfn
+  LayerName:
+    Type: String
+    Default: shared-layer-cfn
+  S3Bucket:
+    Type: String
+    Description: S3 bucket containing the deployment artifacts
+  LayerS3Key:
+    Type: String
+    Description: S3 key for the layer zip
+  FunctionS3Key:
+    Type: String
+    Description: S3 key for the function zip
+
+Resources:
+  # Lambda Layer
+  SharedLayer:
+    Type: AWS::Lambda::LayerVersion
+    Properties:
+      LayerName: !Ref LayerName
+      Description: Shared utility library
+      Content:
+        S3Bucket: !Ref S3Bucket
+        S3Key: !Ref LayerS3Key
+      CompatibleRuntimes:
+        - nodejs18.x
+        - nodejs20.x
+
+  # IAM Role for Lambda
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${FunctionName}-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  # Lambda Function
+  HelloFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Ref FunctionName
+      Role: !GetAtt LambdaRole.Arn
+      Handler: handler.hello
+      Runtime: nodejs18.x
+      Timeout: 30
+      MemorySize: 128
+      Code:
+        S3Bucket: !Ref S3Bucket
+        S3Key: !Ref FunctionS3Key
+      Layers:
+        - !Ref SharedLayer
+
+Outputs:
+  FunctionName:
+    Value: !Ref HelloFunction
+  FunctionArn:
+    Value: !GetAtt HelloFunction.Arn
+  LayerArn:
+    Value: !Ref SharedLayer
+  LayerName:
+    Value: !Ref LayerName
