@@ -1,0 +1,16 @@
+{
+  "app": "python3 app.py",
+  "watch": {
+    "include": ["**"],
+    "exclude": [
+      "cdk.out",
+      ".git",
+      "**/*.pyc",
+      "**/__pycache__"
+    ]
+  },
+  "context": {
+    "@aws-cdk/core:enablePartitionLiterals": true,
+    "@aws-cdk/aws-ec2:restrictDefaultSecurityGroup": false
+  }
+}

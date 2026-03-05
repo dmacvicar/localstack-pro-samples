@@ -3,14 +3,14 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
-STACK_NAME="lambda-container-image-stack"
+STACK_NAME="ecs-ecr-cfn-stack"
 REGION="${AWS_DEFAULT_REGION:-us-east-1}"
 
-echo "Tearing down Lambda Container Image Sample (cloudformation)"
+echo "Tearing down ECS ECR Container App (cloudformation)"
 
 AWS="aws --endpoint-url=http://localhost.localstack.cloud:4566"
 
-REPO_NAME="lambda-container-cfn"
+REPO_NAME="ecs-ecr-cfn"
 
 # Delete CloudFormation stack
 echo "Deleting CloudFormation stack..."

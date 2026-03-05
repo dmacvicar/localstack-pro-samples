@@ -59,7 +59,7 @@ samples/<sample-name>/<language>/
 | lambda-cloudfront | python | scripts, terraform, cloudformation, cdk | 16 |
 | web-app-rds | python | scripts, terraform, cloudformation, cdk | 28 |
 | apigw-custom-domain | python | scripts, terraform, cloudformation, cdk | 28 |
-| ecs-ecr-app | python | scripts | 6 |
+| ecs-ecr-app | python | scripts, terraform, cloudformation, cdk | 24 |
 | apigw-websockets | javascript | scripts | 5 |
 | lambda-layers | javascript | scripts | 5 |
 | lambda-container-image | python | scripts, terraform, cloudformation, cdk | 6 |
@@ -84,7 +84,7 @@ Each sample must include:
 - Python 3.11+
 - uv (Python package manager)
 - Docker
-- LocalStack Pro (running on localhost:4566)
+- LocalStack Pro (running on localhost.localstack.cloud:4566)
 - Node.js 20+ (for JavaScript samples)
 - Terraform, AWS CDK (for respective IaC methods)
 
@@ -93,11 +93,12 @@ Each sample must include:
 See `openspec/changes/port-high-priority-samples/tasks.md` for current state.
 
 ### Recently Completed
+- `ecs-ecr-app/python` - Full port with all 4 IaC methods + teardown scripts
 - `apigw-custom-domain/python` - Full port with all 4 IaC methods + teardown scripts
 - `web-app-rds/python` - Full port with all 4 IaC methods + teardown scripts
 - `lambda-cloudfront/python` - Full port with all 4 IaC methods + teardown scripts
 - `lambda-container-image/python` - Full port with all 4 IaC methods + teardown scripts
 
 ### Next Steps
-- Add IaC methods to remaining samples (ecs-ecr-app)
+- Add IaC methods to remaining samples (apigw-websockets, lambda-layers)
 - Port more samples from original localstack-pro-samples repo

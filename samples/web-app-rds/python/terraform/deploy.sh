@@ -16,7 +16,7 @@ else
     TF="terraform"
 fi
 
-AWS="aws --endpoint-url=http://localhost:4566"
+AWS="aws --endpoint-url=http://localhost.localstack.cloud:4566"
 
 # Initialize Terraform
 echo "Step 1: Initializing Terraform..."

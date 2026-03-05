@@ -21,7 +21,7 @@ else
     CDK="cdk"
 fi
 
-AWS="aws --endpoint-url=http://localhost:4566"
+AWS="aws --endpoint-url=http://localhost.localstack.cloud:4566"
 
 # Step 1: Generate and import certificate
 echo ""

@@ -9,7 +9,7 @@ REGION="${AWS_DEFAULT_REGION:-us-east-1}"
 echo "Deploying Lambda Container Image via CloudFormation"
 
 # Use aws CLI directly to avoid awslocal bugs
-AWS="aws --endpoint-url=http://localhost:4566"
+AWS="aws --endpoint-url=http://localhost.localstack.cloud:4566"
 
 cd "$SCRIPT_DIR"
 

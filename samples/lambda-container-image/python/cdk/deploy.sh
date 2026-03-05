@@ -16,7 +16,7 @@ else
     CDK="cdk"
 fi
 
-AWS="aws --endpoint-url=http://localhost:4566"
+AWS="aws --endpoint-url=http://localhost.localstack.cloud:4566"
 
 echo "Step 1: Installing CDK dependencies..."
 uv pip install --system -r requirements.txt --quiet 2>/dev/null || true

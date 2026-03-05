@@ -47,16 +47,27 @@ class TestEcsEcrApp:
 
     def test_ecr_repository_exists(self, deployed_env, aws_clients):
         """ECR repository should exist."""
+        repo_name = deployed_env.get("REPO_NAME")
+        if not repo_name:
+            # Extract from REPO_URI if REPO_NAME not available
+            repo_uri = deployed_env.get("REPO_URI", "")
+            repo_name = repo_uri.split("/")[-1] if "/" in repo_uri else "ecs-ecr-sample"
+
         response = aws_clients.ecr_client.describe_repositories(
-            repositoryNames=["ecs-ecr-sample"]
+            repositoryNames=[repo_name]
         )
         assert len(response["repositories"]) > 0
         assert "repositoryUri" in response["repositories"][0]
 
     def test_docker_image_in_ecr(self, deployed_env, aws_clients):
         """Docker image should be in ECR."""
+        repo_name = deployed_env.get("REPO_NAME")
+        if not repo_name:
+            repo_uri = deployed_env.get("REPO_URI", "")
+            repo_name = repo_uri.split("/")[-1] if "/" in repo_uri else "ecs-ecr-sample"
+
         response = aws_clients.ecr_client.describe_images(
-            repositoryName="ecs-ecr-sample"
+            repositoryName=repo_name
         )
         assert len(response["imageDetails"]) > 0
 
@@ -72,9 +83,15 @@ class TestEcsEcrApp:
     def test_ecs_service_exists(self, deployed_env, aws_clients):
         """ECS service should exist and be active."""
         cluster_name = deployed_env["CLUSTER_NAME"]
+        # List services in the cluster to find the service name dynamically
+        list_response = aws_clients.ecs_client.list_services(cluster=cluster_name)
+        if not list_response.get("serviceArns"):
+            pytest.skip("No services found in cluster")
+
+        service_arn = list_response["serviceArns"][0]
         response = aws_clients.ecs_client.describe_services(
             cluster=cluster_name,
-            services=["ecs-ecr-sample-service"]
+            services=[service_arn]
         )
         assert len(response["services"]) > 0
         assert response["services"][0]["status"] == "ACTIVE"

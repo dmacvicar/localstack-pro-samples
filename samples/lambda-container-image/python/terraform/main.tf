@@ -16,9 +16,9 @@ provider "aws" {
   skip_requesting_account_id  = true
 
   endpoints {
-    ecr    = "http://localhost:4566"
-    lambda = "http://localhost:4566"
-    iam    = "http://localhost:4566"
+    ecr    = "http://localhost.localstack.cloud:4566"
+    lambda = "http://localhost.localstack.cloud:4566"
+    iam    = "http://localhost.localstack.cloud:4566"
   }
 }
 

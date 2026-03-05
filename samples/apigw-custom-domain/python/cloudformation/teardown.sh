@@ -9,7 +9,7 @@ DOMAIN_NAME="api.example.com"
 
 echo "Tearing down API Gateway Custom Domain Sample (cloudformation)"
 
-AWS="aws --endpoint-url=http://localhost:4566"
+AWS="aws --endpoint-url=http://localhost.localstack.cloud:4566"
 
 # Delete CloudFormation stack
 echo "Deleting CloudFormation stack..."

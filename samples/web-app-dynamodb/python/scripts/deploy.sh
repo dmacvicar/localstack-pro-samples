@@ -23,7 +23,7 @@ if command -v awslocal &> /dev/null; then
     AWS="awslocal"
     echo "Using awslocal for LocalStack environment."
 else
-    AWS="aws --endpoint-url=http://localhost:4566"
+    AWS="aws --endpoint-url=http://localhost.localstack.cloud:4566"
     echo "Using AWS CLI with LocalStack endpoint."
 fi
 

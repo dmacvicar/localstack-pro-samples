@@ -12,7 +12,7 @@ echo "Deploying API Gateway Custom Domain Sample via CloudFormation"
 echo "  Stack: $STACK_NAME"
 echo "  Region: $REGION"
 
-AWS="aws --endpoint-url=http://localhost:4566"
+AWS="aws --endpoint-url=http://localhost.localstack.cloud:4566"
 
 # Step 1: Generate and import certificate
 echo ""

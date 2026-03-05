@@ -16,7 +16,7 @@ echo "  Region: $REGION"
 echo ""
 
 # Use aws CLI directly with endpoint-url to avoid awslocal bugs
-AWS="aws --endpoint-url=http://localhost:4566"
+AWS="aws --endpoint-url=http://localhost.localstack.cloud:4566"
 
 # =============================================================================
 # Step 1: Create ECR Repository

@@ -11,7 +11,7 @@ echo "Deploying Web App RDS Sample via CloudFormation"
 echo "  Stack: $STACK_NAME"
 echo "  Region: $REGION"
 
-AWS="aws --endpoint-url=http://localhost:4566"
+AWS="aws --endpoint-url=http://localhost.localstack.cloud:4566"
 
 cd "$SCRIPT_DIR"
 

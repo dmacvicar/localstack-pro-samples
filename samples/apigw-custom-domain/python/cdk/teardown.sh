@@ -17,7 +17,7 @@ else
     CDK="cdk"
 fi
 
-AWS="aws --endpoint-url=http://localhost:4566"
+AWS="aws --endpoint-url=http://localhost.localstack.cloud:4566"
 
 # Destroy CDK stack
 $CDK destroy --force 2>/dev/null || true

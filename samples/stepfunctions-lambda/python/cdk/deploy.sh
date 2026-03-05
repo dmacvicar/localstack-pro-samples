@@ -17,7 +17,7 @@ fi
 if command -v awslocal &> /dev/null; then
     AWS="awslocal"
 else
-    AWS="aws --endpoint-url=http://localhost:4566"
+    AWS="aws --endpoint-url=http://localhost.localstack.cloud:4566"
 fi
 
 echo "Step 1: Installing CDK dependencies..."

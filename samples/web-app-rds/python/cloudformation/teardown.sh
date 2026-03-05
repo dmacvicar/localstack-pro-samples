@@ -8,7 +8,7 @@ REGION="${AWS_DEFAULT_REGION:-us-east-1}"
 
 echo "Tearing down Web App RDS Sample (cloudformation)"
 
-AWS="aws --endpoint-url=http://localhost:4566"
+AWS="aws --endpoint-url=http://localhost.localstack.cloud:4566"
 
 # Delete CloudFormation stack
 echo "Deleting CloudFormation stack..."

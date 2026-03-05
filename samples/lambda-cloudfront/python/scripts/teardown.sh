@@ -6,7 +6,7 @@ REGION="${AWS_DEFAULT_REGION:-us-east-1}"
 
 echo "Tearing down Lambda CloudFront Sample (scripts)"
 
-AWS="aws --endpoint-url=http://localhost:4566"
+AWS="aws --endpoint-url=http://localhost.localstack.cloud:4566"
 
 # Read .env to get resource names
 if [[ -f "$SCRIPT_DIR/.env" ]]; then
