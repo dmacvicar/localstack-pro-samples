@@ -81,8 +81,9 @@ Migrating from bash tests to pytest for better assertions and retry handling:
 
 - [x] `lambda-container-image` → `samples/lambda-container-image/python`
   - [x] Create directory structure with Dockerfile and handler.py
-  - [x] Write scripts/deploy.sh (ECR, Docker build/push, Lambda create)
-  - [x] Write pytest tests (6 tests)
+  - [x] All 4 IaC methods: scripts, terraform, cloudformation, cdk
+  - [x] Each IaC method has deploy.sh and teardown.sh
+  - [x] Write pytest tests (6 tests × 4 IaC methods = 24 test runs)
   - [x] All tests pass
 
 ## To Do

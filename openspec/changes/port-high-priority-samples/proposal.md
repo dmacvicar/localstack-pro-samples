@@ -2,6 +2,18 @@
 
 Provide comprehensive AWS service examples for LocalStack users.
 
+## What "Porting" Means
+
+Each sample must include:
+
+1. **All IaC methods**: scripts/, terraform/, cloudformation/, cdk/ directories
+2. **deploy.sh**: Deploys all resources for that IaC method
+3. **teardown.sh**: Cleans up all resources (counterpart to deploy.sh)
+4. **pytest tests**: Tests in `test_<sample>.py` parameterized by IaC method
+5. **Consistent .env output**: All deploy scripts write to `scripts/.env`
+
+The sample should work independently with any IaC method, starting from a fresh LocalStack.
+
 ## What Changes
 
 ### Samples

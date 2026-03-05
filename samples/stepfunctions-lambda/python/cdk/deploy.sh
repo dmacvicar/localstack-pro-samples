@@ -21,7 +21,7 @@ else
 fi
 
 echo "Step 1: Installing CDK dependencies..."
-pip install -r requirements.txt --quiet 2>/dev/null || true
+uv pip install --system -r requirements.txt --quiet 2>/dev/null || true
 
 echo "Step 2: Bootstrapping CDK..."
 $CDK bootstrap --quiet 2>/dev/null || true

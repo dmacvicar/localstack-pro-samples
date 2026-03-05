@@ -36,11 +36,7 @@ fi
 # Install Python dependencies
 echo ""
 echo "Step 1: Installing CDK dependencies..."
-if command -v uv &> /dev/null; then
-    uv pip install -r requirements.txt --quiet 2>/dev/null || pip install -r requirements.txt --quiet
-else
-    pip install -r requirements.txt --quiet
-fi
+uv pip install --system -r requirements.txt --quiet 2>/dev/null || true
 
 # Bootstrap CDK (if needed)
 echo "Step 2: Bootstrapping CDK..."

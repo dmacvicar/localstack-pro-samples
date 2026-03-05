@@ -1,0 +1,47 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Lambda Container Image Sample
+
+Parameters:
+  FunctionName:
+    Type: String
+    Default: lambda-container-cfn
+  RepoName:
+    Type: String
+    Default: lambda-container-cfn
+  ImageUri:
+    Type: String
+    Description: ECR image URI (set after image is pushed)
+
+Resources:
+  # IAM Role for Lambda
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${FunctionName}-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  # Lambda Function from Container Image
+  ContainerLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Ref FunctionName
+      Role: !GetAtt LambdaRole.Arn
+      PackageType: Image
+      Code:
+        ImageUri: !Ref ImageUri
+      Timeout: 30
+      MemorySize: 256
+
+Outputs:
+  FunctionName:
+    Value: !Ref ContainerLambda
+  RepoName:
+    Value: !Ref RepoName
