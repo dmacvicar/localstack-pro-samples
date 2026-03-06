@@ -88,8 +88,8 @@ These have scripts/ but need other IaC methods:
 ### Simple (no heavy dependencies)
 - [x] `qldb-ledger-queries` - SKIP: AWS deprecated QLDB (EOL July 2025)
 - [x] `lambda-xray/python` - All 4 IaC methods (24 tests pass)
-- [ ] `cloudwatch-metrics-aws` - CloudWatch metrics
-- [ ] `iam-policy-enforcement` - IAM policy testing
+- [ ] `cloudwatch-metrics-aws` - CloudWatch metrics (requires SMTP)
+- [x] `iam-policy-enforcement/python` - scripts only (8 tests, requires ENFORCE_IAM=1)
 - [x] `codecommit-git-repo/python` - scripts, terraform only (14 tests pass, CloudFormation/CDK unsupported)
 - [x] `lambda-hot-reloading` - SKIP: Development workflow demo, requires special config
 - [x] `mediastore-uploads` - SKIP: MediaStore not supported by LocalStack

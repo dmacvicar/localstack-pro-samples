@@ -57,6 +57,7 @@ This repository contains sample applications demonstrating LocalStack Pro featur
 | [rds-db-queries](samples/rds-db-queries/) | python | scripts | ![tests](https://img.shields.io/badge/tests-pending-lightgrey) | Requires PostgreSQL download |
 | [rds-failover-test](samples/rds-failover-test/) | python | scripts | ![tests](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/dmacvicar/e64cef04f2bd02e575280d4b1184f479/raw/rds-failover-test-python.json) | Terraform/CloudFormation/CDK unsupported |
 | [neptune-graph-db](samples/neptune-graph-db/) | python | scripts | ![tests](https://img.shields.io/badge/tests-pending-lightgrey) | Requires Java/TinkerGraph download |
+| [iam-policy-enforcement](samples/iam-policy-enforcement/) | python | scripts | ![tests](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/dmacvicar/e64cef04f2bd02e575280d4b1184f479/raw/iam-policy-enforcement-python.json) | Requires ENFORCE_IAM=1 |
 
 ## Sample Structure
 
