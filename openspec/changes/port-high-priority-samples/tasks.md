@@ -89,7 +89,7 @@ These have scripts/ but need other IaC methods:
 - [x] `lambda-xray/python` - All 4 IaC methods (24 tests pass)
 - [ ] `cloudwatch-metrics-aws` - CloudWatch metrics
 - [ ] `iam-policy-enforcement` - IAM policy testing
-- [ ] `codecommit-git-repo` - CodeCommit repository
+- [x] `codecommit-git-repo/python` - scripts, terraform only (14 tests pass, CloudFormation/CDK unsupported)
 - [ ] `lambda-hot-reloading` - Hot reload demo
 - [ ] `mediastore-uploads` - MediaStore uploads
 - [ ] `rds-db-queries` - RDS queries (similar to web-app-rds)

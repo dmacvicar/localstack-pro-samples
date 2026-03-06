@@ -143,6 +143,10 @@ class AWSClients:
     def iot_client(self):
         return self._client("iot")
 
+    @property
+    def codecommit_client(self):
+        return self._client("codecommit")
+
 
 @pytest.fixture(scope="session")
 def aws_clients() -> AWSClients:

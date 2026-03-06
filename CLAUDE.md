@@ -65,6 +65,7 @@ samples/<sample-name>/<language>/
 | lambda-container-image | python | scripts, terraform, cloudformation, cdk | 6 |
 | lambda-event-filtering | javascript | scripts, terraform, cloudformation, cdk | 32 |
 | lambda-xray | python | scripts, terraform, cloudformation, cdk | 24 |
+| codecommit-git-repo | python | scripts, terraform | 14 |
 
 ## What "Porting a Sample" Means
 
