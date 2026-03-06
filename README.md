@@ -49,6 +49,7 @@ This repository contains sample applications demonstrating LocalStack Pro featur
 | [athena-s3-queries](samples/athena-s3-queries/) | python | scripts, terraform, cloudformation, cdk | - | Requires Hadoop download |
 | [mq-broker](samples/mq-broker/) | python | scripts, terraform, cloudformation, cdk | - | Requires JDK/ActiveMQ download |
 | [transfer-ftp-s3](samples/transfer-ftp-s3/) | python | scripts | 7 | Terraform/CloudFormation/CDK unsupported |
+| [glacier-s3-select](samples/glacier-s3-select/) | python | scripts | 7 | Terraform/CloudFormation/CDK unsupported |
 
 ## Sample Structure
 

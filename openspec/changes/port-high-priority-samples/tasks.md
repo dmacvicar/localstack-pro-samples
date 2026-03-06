@@ -94,6 +94,7 @@ These have scripts/ but need other IaC methods:
 - [x] `mediastore-uploads` - SKIP: MediaStore not supported by LocalStack
 - [ ] `rds-db-queries` - RDS queries (similar to web-app-rds)
 - [x] `transfer-ftp-s3/python` - scripts only (7 tests pass, Terraform/CloudFormation/CDK unsupported)
+- [x] `glacier-s3-select/python` - scripts only (7 tests pass, Terraform times out, CloudFormation/CDK unsupported)
 
 ### Medium complexity
 - [ ] `cognito-jwt` - Cognito JWT (requires SMTP - may skip)

@@ -151,6 +151,10 @@ class AWSClients:
     def transfer_client(self):
         return self._client("transfer")
 
+    @property
+    def glacier_client(self):
+        return self._client("glacier")
+
 
 @pytest.fixture(scope="session")
 def aws_clients() -> AWSClients:
