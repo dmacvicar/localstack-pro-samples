@@ -100,7 +100,7 @@ These have scripts/ but need other IaC methods:
 ### Medium complexity
 - [ ] `cognito-jwt` - Cognito JWT (requires SMTP - may skip)
 - [ ] `chalice-rest-api` - Chalice framework REST API
-- [ ] `ec2-docker-instances` - EC2 with Docker
+- [x] `ec2-docker-instances/python` - scripts only (7 tests, requires EC2_VM_MANAGER=docker)
 - [ ] `elb-load-balancing` - ELB (uses Serverless Framework)
 - [ ] `glacier-s3-select` - Glacier + S3 Select
 - [~] `neptune-graph-db/python` - scripts only, NEEDS TESTING (requires Java/TinkerGraph download)
