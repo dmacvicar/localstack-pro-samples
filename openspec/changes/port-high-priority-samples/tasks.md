@@ -104,7 +104,7 @@ These have scripts/ but need other IaC methods:
 - [ ] `elb-load-balancing` - ELB (uses Serverless Framework)
 - [ ] `glacier-s3-select` - Glacier + S3 Select
 - [ ] `neptune-graph-db` - Neptune graph database
-- [ ] `rds-failover-test` - RDS failover testing
+- [x] `rds-failover-test/python` - scripts only (7 tests pass, Terraform/CloudFormation/CDK unsupported)
 - [ ] `route53-dns-failover` - Route53 DNS failover
 - [ ] `lambda-php-bref-cdk-app` - PHP Lambda with Bref
 
