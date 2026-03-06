@@ -90,9 +90,10 @@ These have scripts/ but need other IaC methods:
 - [ ] `cloudwatch-metrics-aws` - CloudWatch metrics
 - [ ] `iam-policy-enforcement` - IAM policy testing
 - [x] `codecommit-git-repo/python` - scripts, terraform only (14 tests pass, CloudFormation/CDK unsupported)
-- [ ] `lambda-hot-reloading` - Hot reload demo
-- [ ] `mediastore-uploads` - MediaStore uploads
+- [x] `lambda-hot-reloading` - SKIP: Development workflow demo, requires special config
+- [x] `mediastore-uploads` - SKIP: MediaStore not supported by LocalStack
 - [ ] `rds-db-queries` - RDS queries (similar to web-app-rds)
+- [x] `transfer-ftp-s3/python` - scripts only (7 tests pass, Terraform/CloudFormation/CDK unsupported)
 
 ### Medium complexity
 - [ ] `cognito-jwt` - Cognito JWT (requires SMTP - may skip)
@@ -103,7 +104,6 @@ These have scripts/ but need other IaC methods:
 - [ ] `neptune-graph-db` - Neptune graph database
 - [ ] `rds-failover-test` - RDS failover testing
 - [ ] `route53-dns-failover` - Route53 DNS failover
-- [ ] `transfer-ftp-s3` - Transfer Family FTP to S3
 - [ ] `lambda-php-bref-cdk-app` - PHP Lambda with Bref
 
 ### Complex (heavy dependencies or multiple services)

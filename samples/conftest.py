@@ -147,6 +147,10 @@ class AWSClients:
     def codecommit_client(self):
         return self._client("codecommit")
 
+    @property
+    def transfer_client(self):
+        return self._client("transfer")
+
 
 @pytest.fixture(scope="session")
 def aws_clients() -> AWSClients:
