@@ -155,6 +155,10 @@ class AWSClients:
     def glacier_client(self):
         return self._client("glacier")
 
+    @property
+    def rds_client(self):
+        return self._client("rds")
+
 
 @pytest.fixture(scope="session")
 def aws_clients() -> AWSClients:

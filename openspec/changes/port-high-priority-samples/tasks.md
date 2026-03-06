@@ -92,7 +92,7 @@ These have scripts/ but need other IaC methods:
 - [x] `codecommit-git-repo/python` - scripts, terraform only (14 tests pass, CloudFormation/CDK unsupported)
 - [x] `lambda-hot-reloading` - SKIP: Development workflow demo, requires special config
 - [x] `mediastore-uploads` - SKIP: MediaStore not supported by LocalStack
-- [ ] `rds-db-queries` - RDS queries (similar to web-app-rds)
+- [x] `rds-db-queries` - SKIP: Similar to web-app-rds, RDS instance timing issues
 - [x] `transfer-ftp-s3/python` - scripts only (7 tests pass, Terraform/CloudFormation/CDK unsupported)
 - [x] `glacier-s3-select/python` - scripts only (7 tests pass, Terraform times out, CloudFormation/CDK unsupported)
 
