@@ -31,8 +31,7 @@ SAMPLE_NAME = "transfer-ftp-s3"
 LANGUAGE = "python"
 
 # IaC methods to test
-# Note: Terraform times out, CloudFormation/CDK return "unknown" for ServerId
-IAC_METHODS = ["scripts"]
+IAC_METHODS = ["scripts", "terraform", "cloudformation", "cdk"]
 
 
 @pytest.fixture(scope="module", params=IAC_METHODS)

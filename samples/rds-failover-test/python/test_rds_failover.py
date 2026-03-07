@@ -32,8 +32,7 @@ SAMPLE_NAME = "rds-failover-test"
 LANGUAGE = "python"
 
 # IaC methods to test
-# Note: Terraform/CloudFormation/CDK have issues with RDS Global Cluster resources
-IAC_METHODS = ["scripts"]
+IAC_METHODS = ["scripts", "terraform", "cloudformation", "cdk"]
 
 
 def rds_client(region: str = "us-east-1"):
@@ -53,7 +52,7 @@ def deployed_env(request, aws_clients: AWSClients, wait_for: WaitFor):
     iac_method = request.param
 
     sample_dir = get_sample_dir(SAMPLE_NAME, LANGUAGE)
-    deploy_path = sample_dir / "scripts" / "deploy.sh"
+    deploy_path = sample_dir / iac_method / "deploy.sh"
 
     if not deploy_path.exists():
         pytest.skip(f"Deploy script not found: {deploy_path}")

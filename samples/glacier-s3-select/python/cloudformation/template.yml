@@ -1,0 +1,43 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Glacier S3 Select - CloudFormation template
+
+Parameters:
+  BucketName:
+    Type: String
+    Default: glacier-s3-select
+  ResultsBucket:
+    Type: String
+    Default: glacier-results
+  VaultName:
+    Type: String
+    Default: glacier-vault
+
+Resources:
+  # S3 bucket for CSV data
+  DataBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref BucketName
+
+  # S3 bucket for query results
+  ResultsBucketResource:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref ResultsBucket
+
+  # Glacier vault
+  GlacierVault:
+    Type: AWS::Glacier::Vault
+    Properties:
+      VaultName: !Ref VaultName
+
+Outputs:
+  BucketName:
+    Description: S3 data bucket name
+    Value: !Ref DataBucket
+  ResultsBucket:
+    Description: S3 results bucket name
+    Value: !Ref ResultsBucketResource
+  VaultName:
+    Description: Glacier vault name
+    Value: !Ref GlacierVault

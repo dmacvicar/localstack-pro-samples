@@ -29,8 +29,7 @@ SAMPLE_NAME = "glacier-s3-select"
 LANGUAGE = "python"
 
 # IaC methods to test
-# Note: Terraform times out, CloudFormation/CDK have Glacier support issues
-IAC_METHODS = ["scripts"]
+IAC_METHODS = ["scripts", "terraform", "cloudformation", "cdk"]
 
 
 @pytest.fixture(scope="module", params=IAC_METHODS)

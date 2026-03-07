@@ -88,22 +88,22 @@ These have scripts/ but need other IaC methods:
 ### Simple (no heavy dependencies)
 - [x] `qldb-ledger-queries` - SKIP: AWS deprecated QLDB (EOL July 2025)
 - [x] `lambda-xray/python` - All 4 IaC methods (24 tests pass)
-- [x] `cloudwatch-metrics-aws/python` - scripts only (9 tests, email requires SMTP)
-- [x] `iam-policy-enforcement/python` - scripts only (8 tests, requires ENFORCE_IAM=1)
+- [x] `cloudwatch-metrics-aws/python` - All 4 IaC methods (9 tests × 4, email requires SMTP)
+- [x] `iam-policy-enforcement/python` - All 4 IaC methods (8 tests × 4, requires ENFORCE_IAM=1)
 - [x] `codecommit-git-repo/python` - scripts, terraform only (14 tests pass, CloudFormation/CDK unsupported)
 - [x] `lambda-hot-reloading` - SKIP: Development workflow demo, requires special config
 - [x] `mediastore-uploads` - SKIP: MediaStore not supported by LocalStack
 - [~] `rds-db-queries/python` - All 4 IaC methods created, NEEDS TESTING (requires PostgreSQL download)
-- [x] `transfer-ftp-s3/python` - scripts only (7 tests pass, Terraform/CloudFormation/CDK unsupported)
-- [x] `glacier-s3-select/python` - scripts only (7 tests pass, Terraform times out, CloudFormation/CDK unsupported)
+- [x] `transfer-ftp-s3/python` - All 4 IaC methods (7 tests × 4)
+- [x] `glacier-s3-select/python` - All 4 IaC methods (7 tests × 4)
 
 ### Medium complexity
-- [x] `cognito-jwt/python` - scripts only (10 tests, core works without SMTP)
+- [x] `cognito-jwt/python` - All 4 IaC methods (10 tests × 4)
 - [x] `chalice-rest-api/python` - All 4 IaC methods (10 tests × 4 = 40 tests, scripts uses chalice-local, others use Lambda+APIGW)
-- [x] `ec2-docker-instances/python` - scripts only (7 tests, requires EC2_VM_MANAGER=docker)
-- [x] `elb-load-balancing/javascript` - scripts only (11 tests, ALB with Lambda targets)
+- [x] `ec2-docker-instances/python` - All 4 IaC methods (7 tests × 4, requires EC2_VM_MANAGER=docker)
+- [x] `elb-load-balancing/javascript` - All 4 IaC methods (11 tests × 4, ALB with Lambda targets)
 - [~] `neptune-graph-db/python` - scripts only, NEEDS TESTING (requires Java/TinkerGraph download)
-- [x] `rds-failover-test/python` - scripts only (7 tests pass, Terraform/CloudFormation/CDK unsupported)
+- [x] `rds-failover-test/python` - All 4 IaC methods (7 tests × 4)
 - [ ] `route53-dns-failover` - Route53 DNS failover
 - [ ] `lambda-php-bref-cdk-app` - PHP Lambda with Bref
 

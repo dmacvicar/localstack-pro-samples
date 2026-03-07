@@ -1,0 +1,58 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: RDS Failover Test - CloudFormation template (primary region only)
+
+# Note: CloudFormation can only deploy to a single region at a time.
+# The secondary cluster must be created separately in us-west-1.
+# This template creates the global cluster and primary cluster in us-east-1.
+
+Parameters:
+  GlobalClusterId:
+    Type: String
+    Default: global-cluster
+  PrimaryClusterId:
+    Type: String
+    Default: rds-cluster-1
+
+Resources:
+  # Global cluster
+  GlobalCluster:
+    Type: AWS::RDS::GlobalCluster
+    Properties:
+      GlobalClusterIdentifier: !Ref GlobalClusterId
+      Engine: aurora-postgresql
+      EngineVersion: '13.7'
+      DatabaseName: test
+
+  # Primary cluster
+  PrimaryCluster:
+    Type: AWS::RDS::DBCluster
+    DependsOn: GlobalCluster
+    Properties:
+      DBClusterIdentifier: !Ref PrimaryClusterId
+      Engine: aurora-postgresql
+      EngineVersion: '13.7'
+      DatabaseName: test
+      GlobalClusterIdentifier: !Ref GlobalClusterId
+      MasterUsername: admin
+      MasterUserPassword: adminpassword
+
+  # Primary instance
+  PrimaryInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBClusterIdentifier: !Ref PrimaryCluster
+      DBInstanceIdentifier: inst-1
+      DBInstanceClass: db.r5.large
+      Engine: aurora-postgresql
+      EngineVersion: '13.7'
+
+Outputs:
+  GlobalClusterId:
+    Description: Global cluster ID
+    Value: !Ref GlobalCluster
+  PrimaryClusterId:
+    Description: Primary cluster ID
+    Value: !Ref PrimaryCluster
+  PrimaryArn:
+    Description: Primary cluster ARN
+    Value: !GetAtt PrimaryCluster.DBClusterArn

@@ -1,0 +1,76 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Transfer FTP to S3 - CloudFormation template
+
+Parameters:
+  BucketName:
+    Type: String
+    Default: transfer-files
+  Username:
+    Type: String
+    Default: ftpuser
+
+Resources:
+  # S3 bucket for file storage
+  TransferBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref BucketName
+
+  # IAM role for Transfer service
+  TransferRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: transfer-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: transfer.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: transfer-s3-access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                  - s3:GetBucketLocation
+                Resource: !GetAtt TransferBucket.Arn
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                  - s3:DeleteObject
+                Resource: !Sub ${TransferBucket.Arn}/*
+
+  # Transfer server with FTP protocol
+  TransferServer:
+    Type: AWS::Transfer::Server
+    Properties:
+      EndpointType: PUBLIC
+      IdentityProviderType: SERVICE_MANAGED
+      Protocols:
+        - FTP
+
+  # Transfer user
+  TransferUser:
+    Type: AWS::Transfer::User
+    Properties:
+      ServerId: !GetAtt TransferServer.ServerId
+      UserName: !Ref Username
+      Role: !GetAtt TransferRole.Arn
+      HomeDirectoryType: PATH
+      HomeDirectory: !Sub /${BucketName}
+
+Outputs:
+  ServerId:
+    Description: Transfer server ID
+    Value: !GetAtt TransferServer.ServerId
+  BucketName:
+    Description: S3 bucket name
+    Value: !Ref TransferBucket
+  Username:
+    Description: Transfer username
+    Value: !Ref Username
