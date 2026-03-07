@@ -154,12 +154,22 @@ jobs:
         env:
           LOCALSTACK_AUTH_TOKEN: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}
         run: |
+          # Sample-specific environment variables
+          EXTRA_ENV=""
+          if [ "${{ matrix.sample }}" = "ec2-docker-instances" ]; then
+            EXTRA_ENV="-e EC2_VM_MANAGER=docker"
+          fi
+          if [ "${{ matrix.sample }}" = "iam-policy-enforcement" ]; then
+            EXTRA_ENV="-e ENFORCE_IAM=1"
+          fi
+
           docker run -d \
             --name localstack \
             -p 4566:4566 \
             -p 4510-4559:4510-4559 \
             -e LOCALSTACK_AUTH_TOKEN \
             -e DEBUG=1 \
+            $EXTRA_ENV \
             -v /var/run/docker.sock:/var/run/docker.sock \
             localstack/localstack-pro:latest
 
@@ -173,6 +183,9 @@ jobs:
           AWS_ACCESS_KEY_ID: test
           AWS_SECRET_ACCESS_KEY: test
           AWS_DEFAULT_REGION: us-east-1
+          # Sample-specific test environment
+          EC2_DOCKER_ENABLED: ${{ matrix.sample == 'ec2-docker-instances' && 'true' || '' }}
+          ENFORCE_IAM_ENABLED: ${{ matrix.sample == 'iam-policy-enforcement' && 'true' || '' }}
         run: |
           sample_dir="samples/${{ matrix.sample }}"
           lang_dir="$sample_dir/${{ matrix.language }}"

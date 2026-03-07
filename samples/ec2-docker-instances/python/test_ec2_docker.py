@@ -35,7 +35,7 @@ SAMPLE_NAME = "ec2-docker-instances"
 LANGUAGE = "python"
 
 # IaC methods to test
-IAC_METHODS = ["scripts"]
+IAC_METHODS = ["scripts", "terraform", "cloudformation", "cdk"]
 
 
 def ec2_client():

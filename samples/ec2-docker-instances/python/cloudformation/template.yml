@@ -1,0 +1,33 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: EC2 Docker Instances (requires EC2_VM_MANAGER=docker)
+
+Parameters:
+  AmiId:
+    Type: String
+    Default: ami-00a001
+  InstanceName:
+    Type: String
+    Default: ec2-docker-test
+
+Resources:
+  # EC2 Instance
+  DockerInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref AmiId
+      InstanceType: t2.micro
+      Tags:
+        - Key: Name
+          Value: !Ref InstanceName
+
+Outputs:
+  AmiId:
+    Value: !Ref AmiId
+  InstanceId:
+    Value: !Ref DockerInstance
+  InstanceName:
+    Value: !Ref InstanceName
+  PrivateIp:
+    Value: !GetAtt DockerInstance.PrivateIp
+  PublicIp:
+    Value: !GetAtt DockerInstance.PublicIp
