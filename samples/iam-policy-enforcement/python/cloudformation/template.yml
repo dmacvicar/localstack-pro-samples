@@ -1,0 +1,42 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: IAM Policy Enforcement
+
+Parameters:
+  UserName:
+    Type: String
+    Default: iam-test-user
+  PolicyName:
+    Type: String
+    Default: iam-test-policy
+
+Resources:
+  # IAM Policy
+  TestPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Ref PolicyName
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowKinesisAndS3
+            Effect: Allow
+            Action:
+              - kinesis:*
+              - s3:*
+            Resource: '*'
+
+  # IAM User
+  TestUser:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: !Ref UserName
+      ManagedPolicyArns:
+        - !Ref TestPolicy
+
+Outputs:
+  UserName:
+    Value: !Ref TestUser
+  PolicyName:
+    Value: !Ref PolicyName
+  PolicyArn:
+    Value: !Ref TestPolicy

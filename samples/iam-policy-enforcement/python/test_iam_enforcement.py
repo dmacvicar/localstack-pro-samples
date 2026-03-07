@@ -35,7 +35,7 @@ SAMPLE_NAME = "iam-policy-enforcement"
 LANGUAGE = "python"
 
 # IaC methods to test
-IAC_METHODS = ["scripts"]
+IAC_METHODS = ["scripts", "terraform", "cloudformation", "cdk"]
 
 
 def iam_client(access_key: str = None, secret_key: str = None):
