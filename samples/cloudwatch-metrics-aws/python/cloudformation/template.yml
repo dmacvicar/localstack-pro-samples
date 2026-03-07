@@ -1,0 +1,95 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CloudWatch Metrics with Lambda and SNS Alarm
+
+Parameters:
+  FunctionName:
+    Type: String
+    Default: cw-failing-lambda
+  TopicName:
+    Type: String
+    Default: cw-alarm-topic
+  AlarmName:
+    Type: String
+    Default: cw-lambda-alarm
+  TestEmail:
+    Type: String
+    Default: test@example.com
+
+Resources:
+  # IAM Role for Lambda
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: cw-lambda-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  # Lambda Function
+  LambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Ref FunctionName
+      Runtime: python3.11
+      Handler: handler.lambda_handler
+      Role: !GetAtt LambdaRole.Arn
+      Timeout: 30
+      Code:
+        ZipFile: |
+          def lambda_handler(event, context):
+              """Lambda handler that intentionally fails to generate CloudWatch metrics."""
+              # This lambda intentionally fails to generate error metrics
+              raise Exception("Intentional failure for CloudWatch metrics demo")
+
+  # SNS Topic
+  AlarmTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Ref TopicName
+
+  # SNS Email Subscription
+  EmailSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref AlarmTopic
+      Protocol: email
+      Endpoint: !Ref TestEmail
+
+  # CloudWatch Alarm
+  LambdaErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Ref AlarmName
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods: 1
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Period: 60
+      Statistic: Sum
+      Threshold: 1
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlarmTopic
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref FunctionName
+
+Outputs:
+  FunctionName:
+    Value: !Ref FunctionName
+  LambdaArn:
+    Value: !GetAtt LambdaFunction.Arn
+  TopicName:
+    Value: !Ref TopicName
+  TopicArn:
+    Value: !Ref AlarmTopic
+  AlarmName:
+    Value: !Ref AlarmName
+  TestEmail:
+    Value: !Ref TestEmail

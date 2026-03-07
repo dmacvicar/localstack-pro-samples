@@ -35,7 +35,7 @@ SAMPLE_NAME = "cloudwatch-metrics-aws"
 LANGUAGE = "python"
 
 # IaC methods to test
-IAC_METHODS = ["scripts"]
+IAC_METHODS = ["scripts", "terraform", "cloudformation", "cdk"]
 
 
 def lambda_client():
