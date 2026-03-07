@@ -9,105 +9,65 @@ Each sample must include:
 4. **pytest tests**: In `test_<sample>.py`, parameterized by IaC method
 5. **Consistent .env output**: All deploy scripts write to `scripts/.env`
 
-## Completed (Phase 1 - Initial Ports)
+## Completed Samples (All 4 IaC Methods)
 
-These have scripts/ but need other IaC methods:
+| Sample | Language | Tests | Notes |
+|--------|----------|-------|-------|
+| apigw-custom-domain | python | 7×4=28 | ACM, Route53, API Gateway v2 HTTP API |
+| apigw-websockets | javascript | 7×4=28 | WebSocket API Gateway |
+| athena-s3-queries | python | 8×4=32 | Requires Hadoop download |
+| chalice-rest-api | python | 10×4=40 | scripts uses chalice-local, others use Lambda+APIGW |
+| cloudwatch-metrics-aws | python | 9×4=36 | Email requires SMTP |
+| cognito-jwt | python | 10×4=40 | User pool, client, JWT tokens |
+| ec2-docker-instances | python | 7×4=28 | Requires EC2_VM_MANAGER=docker |
+| ecs-ecr-app | python | 6×4=24 | ECS Fargate + ECR |
+| elb-load-balancing | javascript | 10×4=40 | ALB with Lambda targets |
+| glacier-s3-select | python | 7×4=28 | Glacier vault, S3 Select |
+| iam-policy-enforcement | python | 8×4=32 | Requires ENFORCE_IAM=1 |
+| iot-basics | python | 9×4=36 | IoT thing, cert, policy (MQTT endpoint skipped) |
+| lambda-cloudfront | python | 4×4=16 | CloudFront distribution |
+| lambda-container-image | python | 6×4=24 | Docker container Lambda |
+| lambda-event-filtering | python+js | 8×4=32 | EventBridge filtering |
+| lambda-function-urls | python+js | 7×4=28 | Function URLs |
+| lambda-layers | javascript | 5×4=20 | Lambda layers |
+| lambda-s3-http | python | 10×4=40 | S3 triggers |
+| lambda-xray | python | 6×4=24 | X-Ray tracing |
+| mq-broker | python | 8×4=32 | Requires JDK/ActiveMQ download |
+| rds-failover-test | python | 7×4=28 | Aurora global cluster failover |
+| stepfunctions-lambda | python | 10×4=40 | Step Functions |
+| transfer-ftp-s3 | python | 7×4=28 | AWS Transfer FTP |
+| web-app-dynamodb | python | 8×4=32 | DynamoDB + Lambda |
+| web-app-rds | python | 7×4=28 | RDS PostgreSQL + Lambda |
 
-- [x] `lambda-function-urls/python` - All 4 IaC methods complete
-- [x] `lambda-function-urls/javascript` - All 4 IaC methods (28 tests pass)
-- [x] `stepfunctions-lambda/python` - All 4 IaC methods complete
-- [x] `web-app-dynamodb/python` - All 4 IaC methods complete
-- [x] `lambda-s3-http/python` - All 4 IaC methods complete
-- [x] `lambda-cloudfront/python` - scripts only (needs terraform, cloudformation, cdk)
-- [x] `web-app-rds/python` - scripts only (needs terraform, cloudformation, cdk)
-- [x] `apigw-custom-domain/python` - scripts only (needs terraform, cloudformation, cdk)
-- [x] `ecs-ecr-app/python` - scripts only (needs terraform, cloudformation, cdk)
-- [x] `apigw-websockets/javascript` - scripts only (Serverless Framework)
-- [x] `lambda-layers/javascript` - scripts only (Serverless Framework)
+**Total: 25 samples × 4 IaC methods = 100 deployment configurations**
+**Total tests: ~750 pytest tests**
 
-## Completed (Phase 2 - Full Ports with All IaC Methods)
+## Partial IaC Methods
 
-- [x] `lambda-container-image/python`
-  - [x] All 4 IaC methods: scripts, terraform, cloudformation, cdk
-  - [x] Each has deploy.sh and teardown.sh
-  - [x] pytest tests (6 tests × 4 IaC methods)
-  - [x] All tests pass locally
+| Sample | Language | IaC Methods | Tests | Notes |
+|--------|----------|-------------|-------|-------|
+| codecommit-git-repo | python | scripts, terraform | 7×2=14 | CloudFormation/CDK unsupported for CodeCommit |
 
-- [x] `lambda-cloudfront/python`
-  - [x] All 4 IaC methods: scripts, terraform, cloudformation, cdk
-  - [x] Each has deploy.sh and teardown.sh
-  - [x] pytest tests (4 tests × 4 IaC methods = 16 tests, 12 pass, 4 skipped for CloudFront distribution)
-  - [x] All tests pass locally
+## Remaining Samples (scripts only, need IaC methods)
 
-- [x] `web-app-rds/python`
-  - [x] All 4 IaC methods: scripts, terraform, cloudformation, cdk
-  - [x] Each has deploy.sh and teardown.sh
-  - [x] All IaC methods create VPC + subnets for RDS consistency
-  - [x] pytest tests (7 tests × 4 IaC methods = 28 tests)
-  - [x] All tests pass locally
+| Sample | Language | Tests | Notes |
+|--------|----------|-------|-------|
+| neptune-graph-db | python | 6 | Requires Java/TinkerGraph download |
+| rds-db-queries | python | 6 | Requires PostgreSQL download |
 
-- [x] `apigw-custom-domain/python`
-  - [x] All 4 IaC methods: scripts, terraform, cloudformation, cdk
-  - [x] Each has deploy.sh and teardown.sh
-  - [x] Uses ACM, Route53, API Gateway v2 HTTP API, Lambda, custom domain
-  - [x] pytest tests (7 tests × 4 IaC methods = 28 tests)
-  - [x] All tests pass locally
+## Skipped Samples
 
-## pytest Infrastructure
+- `qldb-ledger-queries` - AWS deprecated QLDB (EOL July 2025)
+- `lambda-hot-reloading` - Development workflow demo, requires special config
+- `mediastore-uploads` - MediaStore not supported by LocalStack
 
-- [x] Shared fixtures in `samples/conftest.py`
-- [x] AWS client fixtures (Lambda, DynamoDB, S3, SQS, Step Functions, ECS, ECR, etc.)
-- [x] tenacity-based wait/retry utilities
-- [x] Tests inside sample directories (not separate tests/ dir)
-- [x] Dependencies in pyproject.toml (run with `uv run pytest`)
-- [x] Shared test support with `-k` filtering for language and IaC method
-
-## CI Infrastructure
-
-- [x] Matrix-based GitHub Actions workflow
-- [x] Discovers sample × language × IaC combinations automatically
-- [x] Uses `uv` for all Python operations (no pip)
-- [x] Pinned awscli-local==0.21 to avoid --s3-endpoint-url bug
-
-## To Do (Priority Order)
-
-1. Add IaC methods + teardown scripts to existing samples:
-   - [x] `lambda-cloudfront/python`
-   - [x] `web-app-rds/python`
-   - [x] `apigw-custom-domain/python`
-   - [x] `ecs-ecr-app/python`
-
-2. Port more samples from original repo:
-   - [x] `lambda-event-filtering/javascript` - All 4 IaC methods
-   - [x] `iot-basics/python` - All 4 IaC methods (8 tests pass, 1 skipped - MQTT endpoint)
-   - [~] `athena-s3-queries/python` - All 4 IaC methods created, NEEDS TESTING (requires Hadoop download)
-   - [~] `mq-broker/python` - All 4 IaC methods created, NEEDS TESTING (requires JDK/ActiveMQ download)
-
-## Remaining Samples to Port (from localstack-pro-samples-original)
-
-### Simple (no heavy dependencies)
-- [x] `qldb-ledger-queries` - SKIP: AWS deprecated QLDB (EOL July 2025)
-- [x] `lambda-xray/python` - All 4 IaC methods (24 tests pass)
-- [x] `cloudwatch-metrics-aws/python` - All 4 IaC methods (9 tests × 4, email requires SMTP)
-- [x] `iam-policy-enforcement/python` - All 4 IaC methods (8 tests × 4, requires ENFORCE_IAM=1)
-- [x] `codecommit-git-repo/python` - scripts, terraform only (14 tests pass, CloudFormation/CDK unsupported)
-- [x] `lambda-hot-reloading` - SKIP: Development workflow demo, requires special config
-- [x] `mediastore-uploads` - SKIP: MediaStore not supported by LocalStack
-- [~] `rds-db-queries/python` - All 4 IaC methods created, NEEDS TESTING (requires PostgreSQL download)
-- [x] `transfer-ftp-s3/python` - All 4 IaC methods (7 tests × 4)
-- [x] `glacier-s3-select/python` - All 4 IaC methods (7 tests × 4)
+## Not Yet Ported (from original repo)
 
 ### Medium complexity
-- [x] `cognito-jwt/python` - All 4 IaC methods (10 tests × 4)
-- [x] `chalice-rest-api/python` - All 4 IaC methods (10 tests × 4 = 40 tests, scripts uses chalice-local, others use Lambda+APIGW)
-- [x] `ec2-docker-instances/python` - All 4 IaC methods (7 tests × 4, requires EC2_VM_MANAGER=docker)
-- [x] `elb-load-balancing/javascript` - All 4 IaC methods (11 tests × 4, ALB with Lambda targets)
-- [~] `neptune-graph-db/python` - scripts only, NEEDS TESTING (requires Java/TinkerGraph download)
-- [x] `rds-failover-test/python` - All 4 IaC methods (7 tests × 4)
 - [ ] `route53-dns-failover` - Route53 DNS failover
 - [ ] `lambda-php-bref-cdk-app` - PHP Lambda with Bref
 
-### Complex (heavy dependencies or multiple services)
+### Complex (heavy dependencies)
 - [ ] `appsync-graphql-api` - AppSync + DynamoDB + RDS + WebSockets
 - [ ] `glue-etl-jobs` - Glue ETL (needs Hadoop/Spark)
 - [ ] `glue-msk-schema-registry` - Glue + MSK
@@ -129,6 +89,19 @@ These have scripts/ but need other IaC methods:
 - [ ] `testcontainers-java-sample` - Testcontainers Java
 - [ ] `multi-account-multi-region-s3-access` - Multi-account S3
 
-## CI Status
+## pytest Infrastructure
 
-15 samples ported, ~200 pytest tests across all IaC method combinations.
+- [x] Shared fixtures in `samples/conftest.py`
+- [x] AWS client fixtures (Lambda, DynamoDB, S3, SQS, Step Functions, ECS, ECR, etc.)
+- [x] tenacity-based wait/retry utilities
+- [x] Tests inside sample directories (not separate tests/ dir)
+- [x] Dependencies in pyproject.toml (run with `uv run pytest`)
+- [x] Shared test support with `-k` filtering for language and IaC method
+
+## CI Infrastructure
+
+- [x] Matrix-based GitHub Actions workflow
+- [x] Discovers sample × language × IaC combinations automatically
+- [x] Uses `uv` for all Python operations (no pip)
+- [x] Pinned awscli-local==0.21 to avoid --s3-endpoint-url bug
+- [x] Sample-specific env vars (EC2_VM_MANAGER=docker, ENFORCE_IAM=1)
