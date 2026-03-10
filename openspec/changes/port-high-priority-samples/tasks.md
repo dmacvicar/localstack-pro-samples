@@ -52,6 +52,7 @@ Each sample must include:
 
 | Sample | Language | Tests | Notes |
 |--------|----------|-------|-------|
+| glue-etl-jobs | python | 10 | Aurora PostgreSQL + Glue JDBC + PySpark ETL |
 | neptune-graph-db | python | 6 | Requires Java/TinkerGraph download |
 | rds-db-queries | python | 6 | Requires PostgreSQL download |
 
@@ -69,7 +70,7 @@ Each sample must include:
 
 ### Complex (heavy dependencies)
 - [ ] `appsync-graphql-api` - AppSync + DynamoDB + RDS + WebSockets
-- [ ] `glue-etl-jobs` - Glue ETL (needs Hadoop/Spark)
+- [x] `glue-etl-jobs` - Glue ETL (needs Hadoop/Spark) — ported as scripts-only
 - [ ] `glue-msk-schema-registry` - Glue + MSK
 - [ ] `glue-redshift-crawler` - Glue + Redshift
 - [ ] `emr-serverless-sample` - EMR Serverless
