@@ -47,6 +47,7 @@ SCRIPT_SAMPLES=(
     "samples/stepfunctions-lambda/python|scripts/deploy.sh|scripts/test.sh|samples/stepfunctions-lambda/python/scripts,samples/stepfunctions-lambda/python/src"
     "samples/web-app-dynamodb/python|scripts/deploy.sh|scripts/test.sh|samples/web-app-dynamodb/python/scripts,samples/web-app-dynamodb/python/src"
     "samples/web-app-rds/python|scripts/deploy.sh|scripts/test.sh|samples/web-app-rds/python/scripts,samples/web-app-rds/python/src"
+    "samples/glue-etl-jobs/python|scripts/deploy.sh|scripts/test.sh|samples/glue-etl-jobs/python/scripts,samples/glue-etl-jobs/python/src"
 )
 
 TERRAFORM_SAMPLES=(

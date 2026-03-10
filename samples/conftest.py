@@ -159,6 +159,14 @@ class AWSClients:
     def rds_client(self):
         return self._client("rds")
 
+    @property
+    def rds_data_client(self):
+        return self._client("rds-data")
+
+    @property
+    def secretsmanager_client(self):
+        return self._client("secretsmanager")
+
 
 @pytest.fixture(scope="session")
 def aws_clients() -> AWSClients:
@@ -226,6 +234,17 @@ class WaitFor:
         svc = response["services"][0]
         if svc["runningCount"] < 1:
             raise Exception(f"Service has {svc['runningCount']} running tasks")
+        return response
+
+    @retry(wait=wait_fixed(4), stop=stop_after_delay(180), reraise=True)
+    def glue_job_complete(self, job_name: str, run_id: str) -> dict:
+        """Wait for Glue job run to complete."""
+        response = self.clients.glue_client.get_job_run(
+            JobName=job_name, RunId=run_id
+        )
+        state = response["JobRun"]["JobRunState"]
+        if state in ("STARTING", "RUNNING", "STOPPING"):
+            raise Exception(f"Glue job {job_name} run {run_id} state is {state}")
         return response
 
     @retry(wait=wait_fixed(3), stop=stop_after_delay(180), reraise=True)
