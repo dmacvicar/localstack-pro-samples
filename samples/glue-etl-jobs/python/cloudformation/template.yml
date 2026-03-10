@@ -1,0 +1,146 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Glue ETL Jobs Sample - Aurora PostgreSQL + Glue ETL pipeline
+
+Parameters:
+  ClusterIdentifier:
+    Type: String
+    Default: glue-etl-cluster1
+  ConnectionName:
+    Type: String
+    Default: glue-etl-cluster1-connection
+  JobName:
+    Type: String
+    Default: test-job1
+  ScriptBucket:
+    Type: String
+    Default: glue-pyspark-test
+  TargetBucket:
+    Type: String
+    Default: glue-sample-target
+
+Resources:
+  # S3 buckets
+  ScriptsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref ScriptBucket
+
+  OutputBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref TargetBucket
+
+  # Aurora PostgreSQL cluster
+  AuroraCluster:
+    Type: AWS::RDS::DBCluster
+    Properties:
+      DBClusterIdentifier: !Ref ClusterIdentifier
+      Engine: aurora-postgresql
+      DatabaseName: test
+      MasterUsername: test
+      MasterUserPassword: test
+
+  # Secrets Manager secret
+  RdsSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: pass
+      SecretString: test
+
+  # Glue database
+  GlueDatabase:
+    Type: AWS::Glue::Database
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseInput:
+        Name: legislators
+
+  # Glue tables
+  MembershipsTable:
+    Type: AWS::Glue::Table
+    DependsOn: GlueDatabase
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseName: legislators
+      TableInput:
+        Name: memberships_json
+        Parameters:
+          connectionName: !Ref ConnectionName
+        StorageDescriptor:
+          Location: test.memberships
+
+  PersonsTable:
+    Type: AWS::Glue::Table
+    DependsOn: GlueDatabase
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseName: legislators
+      TableInput:
+        Name: persons_json
+        Parameters:
+          connectionName: !Ref ConnectionName
+        StorageDescriptor:
+          Location: test.persons
+
+  OrganizationsTable:
+    Type: AWS::Glue::Table
+    DependsOn: GlueDatabase
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseName: legislators
+      TableInput:
+        Name: organizations_json
+        Parameters:
+          connectionName: !Ref ConnectionName
+        StorageDescriptor:
+          Location: test.organizations
+
+  # Glue JDBC connection
+  GlueConnection:
+    Type: AWS::Glue::Connection
+    DependsOn: AuroraCluster
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      ConnectionInput:
+        Name: !Ref ConnectionName
+        ConnectionType: JDBC
+        ConnectionProperties:
+          USERNAME: test
+          PASSWORD: test
+          JDBC_CONNECTION_URL: !Sub
+            - 'jdbc:postgresql://localhost.localstack.cloud:${Port}'
+            - Port: !GetAtt AuroraCluster.Endpoint.Port
+
+  # Glue job
+  GlueJob:
+    Type: AWS::Glue::Job
+    DependsOn:
+      - GlueConnection
+      - MembershipsTable
+      - PersonsTable
+      - OrganizationsTable
+    Properties:
+      Name: !Ref JobName
+      Role: r1
+      Command:
+        Name: pythonshell
+        ScriptLocation: !Sub 's3://${ScriptBucket}/job.py'
+      Connections:
+        Connections:
+          - !Ref ClusterIdentifier
+
+Outputs:
+  ClusterIdentifier:
+    Value: !Ref ClusterIdentifier
+  ClusterPort:
+    Value: !GetAtt AuroraCluster.Endpoint.Port
+  ConnectionName:
+    Value: !Ref ConnectionName
+  JobName:
+    Value: !Ref JobName
+  ScriptBucketName:
+    Value: !Ref ScriptsBucket
+  TargetBucketName:
+    Value: !Ref OutputBucket
+  SecretArn:
+    Value: !Ref RdsSecret
