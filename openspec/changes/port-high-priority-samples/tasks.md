@@ -23,6 +23,7 @@ Each sample must include:
 | ecs-ecr-app | python | 6×4=24 | ECS Fargate + ECR |
 | elb-load-balancing | javascript | 10×4=40 | ALB with Lambda targets |
 | glacier-s3-select | python | 7×4=28 | Glacier vault, S3 Select |
+| glue-etl-jobs | python | 10×4=40 | Aurora PostgreSQL + Glue JDBC + PySpark ETL |
 | iam-policy-enforcement | python | 8×4=32 | Requires ENFORCE_IAM=1 |
 | iot-basics | python | 9×4=36 | IoT thing, cert, policy (MQTT endpoint skipped) |
 | lambda-cloudfront | python | 4×4=16 | CloudFront distribution |
@@ -39,8 +40,8 @@ Each sample must include:
 | web-app-dynamodb | python | 8×4=32 | DynamoDB + Lambda |
 | web-app-rds | python | 7×4=28 | RDS PostgreSQL + Lambda |
 
-**Total: 25 samples × 4 IaC methods = 100 deployment configurations**
-**Total tests: ~750 pytest tests**
+**Total: 26 samples × 4 IaC methods = 104 deployment configurations**
+**Total tests: ~790 pytest tests**
 
 ## Partial IaC Methods
 
@@ -52,7 +53,6 @@ Each sample must include:
 
 | Sample | Language | Tests | Notes |
 |--------|----------|-------|-------|
-| glue-etl-jobs | python | 10 | Aurora PostgreSQL + Glue JDBC + PySpark ETL |
 | neptune-graph-db | python | 6 | Requires Java/TinkerGraph download |
 | rds-db-queries | python | 6 | Requires PostgreSQL download |
 
@@ -70,7 +70,7 @@ Each sample must include:
 
 ### Complex (heavy dependencies)
 - [ ] `appsync-graphql-api` - AppSync + DynamoDB + RDS + WebSockets
-- [x] `glue-etl-jobs` - Glue ETL (needs Hadoop/Spark) — ported as scripts-only
+- [x] `glue-etl-jobs` - Glue ETL (needs Hadoop/Spark) — all 4 IaC methods
 - [ ] `glue-msk-schema-registry` - Glue + MSK
 - [ ] `glue-redshift-crawler` - Glue + Redshift
 - [ ] `emr-serverless-sample` - EMR Serverless
