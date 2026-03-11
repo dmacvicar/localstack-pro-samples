@@ -1,0 +1,24 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Neptune Graph Database - CloudFormation template
+
+Parameters:
+  ClusterId:
+    Type: String
+    Default: neptune-test-cluster
+
+Resources:
+  NeptuneCluster:
+    Type: AWS::Neptune::DBCluster
+    Properties:
+      DBClusterIdentifier: !Ref ClusterId
+
+Outputs:
+  ClusterId:
+    Description: Neptune cluster ID
+    Value: !Ref NeptuneCluster
+  ClusterEndpoint:
+    Description: Neptune cluster endpoint
+    Value: !GetAtt NeptuneCluster.Endpoint
+  ClusterPort:
+    Description: Neptune cluster port
+    Value: !GetAtt NeptuneCluster.Port

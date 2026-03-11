@@ -34,14 +34,15 @@ Each sample must include:
 | lambda-s3-http | python | 10×4=40 | S3 triggers |
 | lambda-xray | python | 6×4=24 | X-Ray tracing |
 | mq-broker | python | 8×4=32 | Requires JDK/ActiveMQ download |
+| neptune-graph-db | python | 10×4=40 | Gremlin graph queries + TinkerPop |
 | rds-failover-test | python | 7×4=28 | Aurora global cluster failover |
 | stepfunctions-lambda | python | 10×4=40 | Step Functions |
 | transfer-ftp-s3 | python | 7×4=28 | AWS Transfer FTP |
 | web-app-dynamodb | python | 8×4=32 | DynamoDB + Lambda |
 | web-app-rds | python | 7×4=28 | RDS PostgreSQL + Lambda |
 
-**Total: 26 samples × 4 IaC methods = 104 deployment configurations**
-**Total tests: ~790 pytest tests**
+**Total: 27 samples × 4 IaC methods = 108 deployment configurations**
+**Total tests: ~830 pytest tests**
 
 ## Partial IaC Methods
 
@@ -53,7 +54,6 @@ Each sample must include:
 
 | Sample | Language | Tests | Notes |
 |--------|----------|-------|-------|
-| neptune-graph-db | python | 6 | Requires Java/TinkerGraph download |
 | rds-db-queries | python | 6 | Requires PostgreSQL download |
 
 ## Skipped Samples

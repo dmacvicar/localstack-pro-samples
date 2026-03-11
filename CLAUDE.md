@@ -75,6 +75,7 @@ samples/<sample-name>/<language>/
 | ec2-docker-instances | python | scripts, terraform, cloudformation, cdk | 28 |
 | elb-load-balancing | javascript | scripts, terraform, cloudformation, cdk | 44 |
 | iam-policy-enforcement | python | scripts, terraform, cloudformation, cdk | 32 |
+| neptune-graph-db | python | scripts, terraform, cloudformation, cdk | 40 |
 
 ## What "Porting a Sample" Means
 
