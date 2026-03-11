@@ -1,0 +1,38 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: RDS Database Queries - CloudFormation template
+
+Parameters:
+  DBInstanceId:
+    Type: String
+    Default: rds-db
+  DBName:
+    Type: String
+    Default: testdb
+  DBUser:
+    Type: String
+    Default: testuser
+  DBPassword:
+    Type: String
+    Default: testpass123
+
+Resources:
+  DBInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceIdentifier: !Ref DBInstanceId
+      DBInstanceClass: db.t3.micro
+      Engine: postgres
+      DBName: !Ref DBName
+      MasterUsername: !Ref DBUser
+      MasterUserPassword: !Ref DBPassword
+
+Outputs:
+  DBInstanceId:
+    Description: RDS instance identifier
+    Value: !Ref DBInstance
+  DBName:
+    Description: Database name
+    Value: !Ref DBName
+  DBUser:
+    Description: Database user
+    Value: !Ref DBUser

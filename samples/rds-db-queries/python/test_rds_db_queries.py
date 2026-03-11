@@ -30,7 +30,7 @@ SAMPLE_NAME = "rds-db-queries"
 LANGUAGE = "python"
 
 # IaC methods to test
-IAC_METHODS = ["scripts"]
+IAC_METHODS = ["scripts", "terraform", "cloudformation", "cdk"]
 
 
 @pytest.fixture(scope="module", params=IAC_METHODS)
