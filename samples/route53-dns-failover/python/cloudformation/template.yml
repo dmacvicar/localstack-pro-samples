@@ -1,0 +1,88 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Route53 DNS Failover with health-checked routing
+
+Parameters:
+  ZoneName:
+    Type: String
+    Default: failover-cfn.example.com
+
+Resources:
+  HostedZone:
+    Type: AWS::Route53::HostedZone
+    Properties:
+      Name: !Ref ZoneName
+
+  HealthCheck:
+    Type: AWS::Route53::HealthCheck
+    Properties:
+      HealthCheckConfig:
+        FullyQualifiedDomainName: localhost.localstack.cloud
+        Port: 4566
+        ResourcePath: /_localstack/health
+        Type: HTTP
+        RequestInterval: 10
+
+  Target1Record:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZone
+      Name: !Sub "target1.${ZoneName}"
+      Type: CNAME
+      TTL: '60'
+      ResourceRecords:
+        - primary.example.com
+
+  Target2Record:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZone
+      Name: !Sub "target2.${ZoneName}"
+      Type: CNAME
+      TTL: '60'
+      ResourceRecords:
+        - secondary.example.com
+
+  FailoverPrimary:
+    Type: AWS::Route53::RecordSet
+    DependsOn:
+      - Target1Record
+    Properties:
+      HostedZoneId: !Ref HostedZone
+      Name: !Sub "app.${ZoneName}"
+      Type: CNAME
+      SetIdentifier: primary
+      AliasTarget:
+        HostedZoneId: !Ref HostedZone
+        DNSName: !Sub "target1.${ZoneName}"
+        EvaluateTargetHealth: true
+      HealthCheckId: !Ref HealthCheck
+      Failover: PRIMARY
+
+  FailoverSecondary:
+    Type: AWS::Route53::RecordSet
+    DependsOn:
+      - Target2Record
+    Properties:
+      HostedZoneId: !Ref HostedZone
+      Name: !Sub "app.${ZoneName}"
+      Type: CNAME
+      SetIdentifier: secondary
+      AliasTarget:
+        HostedZoneId: !Ref HostedZone
+        DNSName: !Sub "target2.${ZoneName}"
+        EvaluateTargetHealth: true
+      Failover: SECONDARY
+
+Outputs:
+  HostedZoneId:
+    Value: !Ref HostedZone
+  HostedZoneName:
+    Value: !Ref ZoneName
+  HealthCheckId:
+    Value: !Ref HealthCheck
+  FailoverRecord:
+    Value: !Sub "app.${ZoneName}"
+  Target1Record:
+    Value: !Sub "target1.${ZoneName}"
+  Target2Record:
+    Value: !Sub "target2.${ZoneName}"

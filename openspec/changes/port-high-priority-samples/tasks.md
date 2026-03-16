@@ -35,14 +35,16 @@ Each sample must include:
 | lambda-xray | python | 6×4=24 | X-Ray tracing |
 | mq-broker | python | 8×4=32 | Requires JDK/ActiveMQ download |
 | neptune-graph-db | python | 10×4=40 | Gremlin graph queries + TinkerPop |
+| rds-db-queries | python | 6×4=24 | PostgreSQL RDS instance + queries |
+| route53-dns-failover | python | 10×4=40 | DNS failover with health checks |
 | rds-failover-test | python | 7×4=28 | Aurora global cluster failover |
 | stepfunctions-lambda | python | 10×4=40 | Step Functions |
 | transfer-ftp-s3 | python | 7×4=28 | AWS Transfer FTP |
 | web-app-dynamodb | python | 8×4=32 | DynamoDB + Lambda |
 | web-app-rds | python | 7×4=28 | RDS PostgreSQL + Lambda |
 
-**Total: 27 samples × 4 IaC methods = 108 deployment configurations**
-**Total tests: ~830 pytest tests**
+**Total: 29 samples × 4 IaC methods = 116 deployment configurations**
+**Total tests: ~894 pytest tests**
 
 ## Partial IaC Methods
 
@@ -52,9 +54,7 @@ Each sample must include:
 
 ## Remaining Samples (scripts only, need IaC methods)
 
-| Sample | Language | Tests | Notes |
-|--------|----------|-------|-------|
-| rds-db-queries | python | 6 | Requires PostgreSQL download |
+(None - all current samples have all 4 IaC methods)
 
 ## Skipped Samples
 
@@ -65,7 +65,7 @@ Each sample must include:
 ## Not Yet Ported (from original repo)
 
 ### Medium complexity
-- [ ] `route53-dns-failover` - Route53 DNS failover
+- [x] `route53-dns-failover` - Route53 DNS failover — all 4 IaC methods
 - [ ] `lambda-php-bref-cdk-app` - PHP Lambda with Bref
 
 ### Complex (heavy dependencies)

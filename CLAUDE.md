@@ -2,6 +2,10 @@
 
 Repository of AWS sample applications for LocalStack Pro.
 
+## Highest Principle: Surface LocalStack Gaps
+
+The primary goal is to **test the sample faithfully against LocalStack**. If LocalStack does not support a particular IaC deployment method or has a bug, we do NOT work around it or hide it. Instead, we **surface the failure in the test** so it is visible and trackable. Write the correct AWS-compatible IaC code, and if LocalStack fails to deploy or behave correctly, let that test fail. This makes our test suite a canary for LocalStack compatibility.
+
 ## Quick Start
 
 ```bash
@@ -76,6 +80,7 @@ samples/<sample-name>/<language>/
 | elb-load-balancing | javascript | scripts, terraform, cloudformation, cdk | 44 |
 | iam-policy-enforcement | python | scripts, terraform, cloudformation, cdk | 32 |
 | neptune-graph-db | python | scripts, terraform, cloudformation, cdk | 40 |
+| route53-dns-failover | python | scripts, terraform, cloudformation, cdk | 40 |
 
 ## What "Porting a Sample" Means
 
