@@ -2,7 +2,7 @@
 
 AppSync GraphQL API with DynamoDB and RDS Aurora PostgreSQL data sources, using VTL mapping templates.
 
-Ported from the [original sample](../../localstack-pro-samples-original/appsync-graphql-api/).
+Ported from the original [localstack-pro-samples](https://github.com/localstack/localstack-pro-samples) repo.
 
 ## What it does
 
