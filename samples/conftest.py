@@ -171,6 +171,14 @@ class AWSClients:
     def appsync_client(self):
         return self._client("appsync")
 
+    @property
+    def redshift_client(self):
+        return self._client("redshift")
+
+    @property
+    def redshift_data_client(self):
+        return self._client("redshift-data")
+
 
 @pytest.fixture(scope="session")
 def aws_clients() -> AWSClients:

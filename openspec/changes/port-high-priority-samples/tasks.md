@@ -38,14 +38,15 @@ Each sample must include:
 | rds-db-queries | python | 6×4=24 | PostgreSQL RDS instance + queries |
 | route53-dns-failover | python | 10×4=40 | DNS failover with health checks |
 | appsync-graphql-api | python | 13×4=52 | AppSync + DynamoDB + RDS Aurora (1 DDB Scan gap) |
+| glue-redshift-crawler | python | 10×4=40 | Redshift + Glue Crawler (terraform deploy fails: connection ID format) |
 | rds-failover-test | python | 7×4=28 | Aurora global cluster failover |
 | stepfunctions-lambda | python | 10×4=40 | Step Functions |
 | transfer-ftp-s3 | python | 7×4=28 | AWS Transfer FTP |
 | web-app-dynamodb | python | 8×4=32 | DynamoDB + Lambda |
 | web-app-rds | python | 7×4=28 | RDS PostgreSQL + Lambda |
 
-**Total: 30 samples × 4 IaC methods = 120 deployment configurations**
-**Total tests: ~946 pytest tests**
+**Total: 31 samples × 4 IaC methods = 124 deployment configurations**
+**Total tests: ~986 pytest tests**
 
 ## Partial IaC Methods
 
@@ -73,7 +74,7 @@ Each sample must include:
 - [x] `appsync-graphql-api` - AppSync + DynamoDB + RDS Aurora — all 4 IaC methods (1 DDB Scan VTL gap)
 - [x] `glue-etl-jobs` - Glue ETL (needs Hadoop/Spark) — all 4 IaC methods
 - [ ] `glue-msk-schema-registry` - Glue + MSK
-- [ ] `glue-redshift-crawler` - Glue + Redshift
+- [x] `glue-redshift-crawler` - Glue + Redshift — all 4 IaC methods (terraform deploy fails: Glue connection ID format gap)
 - [ ] `emr-serverless-sample` - EMR Serverless
 - [ ] `emr-serverless-spark` - EMR Spark
 - [ ] `emr-serverless-python-dependencies` - EMR Python

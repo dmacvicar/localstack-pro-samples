@@ -82,6 +82,7 @@ samples/<sample-name>/<language>/
 | neptune-graph-db | python | scripts, terraform, cloudformation, cdk | 40 |
 | route53-dns-failover | python | scripts, terraform, cloudformation, cdk | 40 |
 | appsync-graphql-api | python | scripts, terraform, cloudformation, cdk | 52 |
+| glue-redshift-crawler | python | scripts, terraform, cloudformation, cdk | 40 |
 
 ## What "Porting a Sample" Means
 

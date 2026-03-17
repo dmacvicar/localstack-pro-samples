@@ -1,0 +1,103 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Glue Redshift Crawler - Glue crawler populates catalog from Redshift table
+
+Parameters:
+  RedshiftClusterId:
+    Type: String
+    Default: redshift-cfn
+  RedshiftDBName:
+    Type: String
+    Default: db1
+  RedshiftUsername:
+    Type: String
+    Default: testuser
+  RedshiftPassword:
+    Type: String
+    Default: testPass123
+  GlueDBName:
+    Type: String
+    Default: gluedb-cfn
+
+Resources:
+  GlueRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: glue-crawler-role-cfn
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: glue.amazonaws.com
+            Action: sts:AssumeRole
+
+  RedshiftCluster:
+    Type: AWS::Redshift::Cluster
+    Properties:
+      ClusterIdentifier: !Ref RedshiftClusterId
+      DBName: !Ref RedshiftDBName
+      MasterUsername: !Ref RedshiftUsername
+      MasterUserPassword: !Ref RedshiftPassword
+      NodeType: dc2.large
+      ClusterType: single-node
+
+  GlueDatabase:
+    Type: AWS::Glue::Database
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseInput:
+        Name: !Ref GlueDBName
+
+  GlueConnection:
+    Type: AWS::Glue::Connection
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      ConnectionInput:
+        Name: glueconn-cfn
+        ConnectionType: JDBC
+        ConnectionProperties:
+          USERNAME: !Ref RedshiftUsername
+          PASSWORD: !Ref RedshiftPassword
+          JDBC_CONNECTION_URL: !Sub
+            - "jdbc:redshift://${Host}:${Port}/${DB}"
+            - Host: !GetAtt RedshiftCluster.Endpoint.Address
+              Port: !GetAtt RedshiftCluster.Endpoint.Port
+              DB: !Ref RedshiftDBName
+
+  GlueCrawler:
+    Type: AWS::Glue::Crawler
+    Properties:
+      Name: crawler-cfn
+      DatabaseName: !Ref GlueDBName
+      Role: !GetAtt GlueRole.Arn
+      Targets:
+        JdbcTargets:
+          - ConnectionName: glueconn-cfn
+            Path: !Sub "${RedshiftDBName}/%/sales"
+    DependsOn:
+      - GlueDatabase
+      - GlueConnection
+
+Outputs:
+  RedshiftClusterId:
+    Value: !Ref RedshiftClusterId
+  RedshiftDBName:
+    Value: !Ref RedshiftDBName
+  RedshiftTableName:
+    Value: sales
+  RedshiftSchemaName:
+    Value: public
+  RedshiftUsername:
+    Value: !Ref RedshiftUsername
+  RedshiftHost:
+    Value: !GetAtt RedshiftCluster.Endpoint.Address
+  RedshiftPort:
+    Value: !GetAtt RedshiftCluster.Endpoint.Port
+  GlueDBName:
+    Value: !Ref GlueDBName
+  GlueConnectionName:
+    Value: glueconn-cfn
+  GlueCrawlerName:
+    Value: crawler-cfn
+  GlueTableName:
+    Value: !Sub "${RedshiftDBName}_public_sales"
