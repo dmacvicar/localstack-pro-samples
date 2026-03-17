@@ -37,14 +37,15 @@ Each sample must include:
 | neptune-graph-db | python | 10×4=40 | Gremlin graph queries + TinkerPop |
 | rds-db-queries | python | 6×4=24 | PostgreSQL RDS instance + queries |
 | route53-dns-failover | python | 10×4=40 | DNS failover with health checks |
+| appsync-graphql-api | python | 13×4=52 | AppSync + DynamoDB + RDS Aurora (1 DDB Scan gap) |
 | rds-failover-test | python | 7×4=28 | Aurora global cluster failover |
 | stepfunctions-lambda | python | 10×4=40 | Step Functions |
 | transfer-ftp-s3 | python | 7×4=28 | AWS Transfer FTP |
 | web-app-dynamodb | python | 8×4=32 | DynamoDB + Lambda |
 | web-app-rds | python | 7×4=28 | RDS PostgreSQL + Lambda |
 
-**Total: 29 samples × 4 IaC methods = 116 deployment configurations**
-**Total tests: ~894 pytest tests**
+**Total: 30 samples × 4 IaC methods = 120 deployment configurations**
+**Total tests: ~946 pytest tests**
 
 ## Partial IaC Methods
 
@@ -69,7 +70,7 @@ Each sample must include:
 - [ ] `lambda-php-bref-cdk-app` - PHP Lambda with Bref
 
 ### Complex (heavy dependencies)
-- [ ] `appsync-graphql-api` - AppSync + DynamoDB + RDS + WebSockets
+- [x] `appsync-graphql-api` - AppSync + DynamoDB + RDS Aurora — all 4 IaC methods (1 DDB Scan VTL gap)
 - [x] `glue-etl-jobs` - Glue ETL (needs Hadoop/Spark) — all 4 IaC methods
 - [ ] `glue-msk-schema-registry` - Glue + MSK
 - [ ] `glue-redshift-crawler` - Glue + Redshift

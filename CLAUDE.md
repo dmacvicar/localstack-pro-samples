@@ -81,6 +81,7 @@ samples/<sample-name>/<language>/
 | iam-policy-enforcement | python | scripts, terraform, cloudformation, cdk | 32 |
 | neptune-graph-db | python | scripts, terraform, cloudformation, cdk | 40 |
 | route53-dns-failover | python | scripts, terraform, cloudformation, cdk | 40 |
+| appsync-graphql-api | python | scripts, terraform, cloudformation, cdk | 52 |
 
 ## What "Porting a Sample" Means
 

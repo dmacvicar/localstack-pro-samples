@@ -167,6 +167,10 @@ class AWSClients:
     def secretsmanager_client(self):
         return self._client("secretsmanager")
 
+    @property
+    def appsync_client(self):
+        return self._client("appsync")
+
 
 @pytest.fixture(scope="session")
 def aws_clients() -> AWSClients:

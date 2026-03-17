@@ -1,0 +1,250 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: AppSync GraphQL API with DynamoDB and RDS Aurora data sources
+
+Parameters:
+  TableName:
+    Type: String
+    Default: appsync-table-cfn
+  DBClusterId:
+    Type: String
+    Default: appsync-rds-cfn
+  DBName:
+    Type: String
+    Default: testappsync
+  DBUser:
+    Type: String
+    Default: testuser
+  DBPassword:
+    Type: String
+    Default: testpass
+
+Resources:
+  # DynamoDB table
+  DDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Ref TableName
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
+  # RDS Aurora PostgreSQL cluster
+  RDSCluster:
+    Type: AWS::RDS::DBCluster
+    Properties:
+      DBClusterIdentifier: !Ref DBClusterId
+      Engine: aurora-postgresql
+      MasterUsername: !Ref DBUser
+      MasterUserPassword: !Ref DBPassword
+      DatabaseName: !Ref DBName
+
+  # Secrets Manager secret for RDS
+  RDSSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: appsync-rds-secret-cfn
+      SecretString: !Ref DBPassword
+
+  # IAM role for AppSync
+  AppSyncRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: appsync-role-cfn
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: appsync.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: appsync-ddb-rds
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: dynamodb:*
+                Resource: !GetAtt DDBTable.Arn
+              - Effect: Allow
+                Action:
+                  - rds-data:*
+                  - secretsmanager:GetSecretValue
+                Resource: '*'
+
+  # AppSync GraphQL API
+  GraphQLApi:
+    Type: AWS::AppSync::GraphQLApi
+    Properties:
+      Name: appsync-api-cfn
+      AuthenticationType: API_KEY
+
+  # API Key
+  ApiKey:
+    Type: AWS::AppSync::ApiKey
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+
+  # GraphQL Schema
+  GraphQLSchema:
+    Type: AWS::AppSync::GraphQLSchema
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      Definition: |
+        schema {
+            query: Query
+            mutation: Mutation
+            subscription: Subscription
+        }
+
+        type Query {
+            getPostsDDB: [Post!]!
+            getPostsRDS: [Post!]!
+        }
+
+        type Mutation {
+            addPostDDB(id: String!): Post!
+            addPostRDS(id: String!): Post!
+        }
+
+        type Subscription {
+            addedPost: Post
+            @aws_subscribe(mutations: ["addPostDDB"])
+        }
+
+        type Post {
+            id: String!
+            time: AWSTimestamp
+        }
+
+  # DynamoDB data source
+  DDBDataSource:
+    Type: AWS::AppSync::DataSource
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      Name: ds_ddb
+      Type: AMAZON_DYNAMODB
+      ServiceRoleArn: !GetAtt AppSyncRole.Arn
+      DynamoDBConfig:
+        TableName: !Ref DDBTable
+        AwsRegion: !Ref AWS::Region
+
+  # RDS data source
+  RDSDataSource:
+    Type: AWS::AppSync::DataSource
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      Name: ds_rds
+      Type: RELATIONAL_DATABASE
+      ServiceRoleArn: !GetAtt AppSyncRole.Arn
+      RelationalDatabaseConfig:
+        RelationalDatabaseSourceType: RDS_HTTP_ENDPOINT
+        RdsHttpEndpointConfig:
+          AwsRegion: !Ref AWS::Region
+          DbClusterIdentifier: !GetAtt RDSCluster.DBClusterArn
+          DatabaseName: !Ref DBName
+          AwsSecretStoreArn: !Ref RDSSecret
+
+  # DynamoDB resolvers
+  AddPostDDBResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: GraphQLSchema
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: addPostDDB
+      DataSourceName: !GetAtt DDBDataSource.Name
+      RequestMappingTemplate: |
+        {
+            "version" : "2017-02-28",
+            "operation" : "PutItem",
+            "key": {
+                "id" : { "S" : "${context.arguments.id}" }
+            },
+            "attributeValues" : {}
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($context.result)
+
+  GetPostsDDBResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: GraphQLSchema
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: getPostsDDB
+      DataSourceName: !GetAtt DDBDataSource.Name
+      RequestMappingTemplate: |
+        {
+            "version" : "2017-02-28",
+            "operation" : "Scan"
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($context.result)
+
+  # RDS resolvers
+  AddPostRDSResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: GraphQLSchema
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: addPostRDS
+      DataSourceName: !GetAtt RDSDataSource.Name
+      RequestMappingTemplate: |
+        {
+            "version": "2018-05-29",
+            "statements": [
+                "CREATE TABLE IF NOT EXISTS posts (id varchar, title varchar)",
+                "INSERT INTO posts (id, title) values ('$ctx.args.id', 'test title')",
+                "SELECT * FROM posts WHERE id='$ctx.args.id'"
+            ]
+        }
+      ResponseMappingTemplate: |
+        #set($resObj=$utils.rds.toJsonObject($ctx.result))
+        #set($resObj1=$resObj[2])
+        $utils.toJson($resObj1[0])
+
+  GetPostsRDSResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: GraphQLSchema
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: getPostsRDS
+      DataSourceName: !GetAtt RDSDataSource.Name
+      RequestMappingTemplate: |
+        {
+            "version": "2018-05-29",
+            "statements": [
+                "SELECT id, title FROM posts"
+            ]
+        }
+      ResponseMappingTemplate: |
+        #set($resObj=$utils.rds.toJsonObject($ctx.result))
+        $utils.toJson($resObj[0])
+
+Outputs:
+  ApiId:
+    Value: !GetAtt GraphQLApi.ApiId
+  ApiUrl:
+    Value: !GetAtt GraphQLApi.GraphQLUrl
+  ApiKey:
+    Value: !GetAtt ApiKey.ApiKey
+  ApiName:
+    Value: appsync-api-cfn
+  TableName:
+    Value: !Ref TableName
+  DBClusterId:
+    Value: !Ref DBClusterId
+  DBClusterArn:
+    Value: !GetAtt RDSCluster.DBClusterArn
+  DBName:
+    Value: !Ref DBName
+  SecretArn:
+    Value: !Ref RDSSecret
+  RoleArn:
+    Value: !GetAtt AppSyncRole.Arn
