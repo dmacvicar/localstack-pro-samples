@@ -179,6 +179,10 @@ class AWSClients:
     def redshift_data_client(self):
         return self._client("redshift-data")
 
+    @property
+    def kafka_client(self):
+        return self._client("kafka")
+
 
 @pytest.fixture(scope="session")
 def aws_clients() -> AWSClients:

@@ -1,0 +1,102 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Glue MSK Schema Registry - MSK cluster with Glue Schema Registry
+
+Parameters:
+  ClusterName:
+    Type: String
+    Default: msk-cluster-cfn
+  RegistryName:
+    Type: String
+    Default: registry-cfn
+  SchemaName:
+    Type: String
+    Default: schema-cfn
+  SubnetId1:
+    Type: String
+  SubnetId2:
+    Type: String
+
+Resources:
+  MSKCluster:
+    Type: AWS::MSK::Cluster
+    Properties:
+      ClusterName: !Ref ClusterName
+      KafkaVersion: '3.5.1'
+      NumberOfBrokerNodes: 2
+      BrokerNodeGroupInfo:
+        InstanceType: kafka.m5.xlarge
+        ClientSubnets:
+          - !Ref SubnetId1
+          - !Ref SubnetId2
+
+  GlueRegistry:
+    Type: AWS::Glue::Registry
+    Properties:
+      Name: !Ref RegistryName
+
+  GlueSchema:
+    Type: AWS::Glue::Schema
+    DependsOn: GlueRegistry
+    Properties:
+      Name: !Ref SchemaName
+      Registry:
+        Arn: !GetAtt GlueRegistry.Arn
+      DataFormat: AVRO
+      Compatibility: BACKWARD
+      SchemaDefinition: |
+        {
+          "type": "record",
+          "name": "UnicornRideRequest",
+          "namespace": "cloud.localstack.demos.gluemsk.schema",
+          "fields": [
+            {"name": "request_id", "type": "int", "doc": "customer request id"},
+            {"name": "pickup_address","type": "string","doc": "customer pickup address"},
+            {"name": "destination_address","type": "string","doc": "customer destination address"},
+            {"name": "ride_fare","type": "float","doc": "ride fare amount (USD)"},
+            {"name": "ride_duration","type": "int","doc": "ride duration in minutes"},
+            {"name": "preferred_unicorn_color","type": {"type": "enum","name": "UnicornPreferredColor","symbols": ["WHITE","BLACK","RED","BLUE","GREY"]}, "default": "WHITE"},
+            {
+              "name": "recommended_unicorn",
+              "type": {
+                "type": "record",
+                "name": "RecommendedUnicorn",
+                "fields": [
+                  {"name": "unicorn_id","type": "int", "doc": "recommended unicorn id"},
+                  {"name": "color","type": {"type": "enum","name": "unicorn_color","symbols": ["WHITE","RED","BLUE"]}},
+                  {"name": "stars_rating", "type": ["null", "int"], "default": null, "doc": "unicorn star ratings based on customers feedback"}
+                ]
+              }
+            },
+            {
+              "name": "customer",
+              "type": {
+                "type": "record",
+                "name": "Customer",
+                "fields": [
+                  {"name": "customer_account_no","type": "int", "doc": "customer account number"},
+                  {"name": "first_name","type": "string"},
+                  {"name": "middle_name","type": ["null","string"], "default": null},
+                  {"name": "last_name","type": "string"},
+                  {"name": "email_addresses","type": ["null", {"type":"array", "items":"string" }]},
+                  {"name": "customer_address","type": "string","doc": "customer address"},
+                  {"name": "mode_of_payment","type": {"type": "enum","name": "ModeOfPayment","symbols": ["CARD","CASH"]}, "default": "CARD"},
+                  {"name": "customer_rating", "type": ["null", "int"], "default": null}
+                ]
+              }
+            }
+          ]
+        }
+
+Outputs:
+  ClusterName:
+    Value: !Ref ClusterName
+  ClusterArn:
+    Value: !Ref MSKCluster
+  RegistryName:
+    Value: !Ref RegistryName
+  RegistryArn:
+    Value: !GetAtt GlueRegistry.Arn
+  SchemaName:
+    Value: !Ref SchemaName
+  SchemaArn:
+    Value: !GetAtt GlueSchema.Arn

@@ -1,0 +1,21 @@
+#!/bin/bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+if command -v awslocal &> /dev/null; then
+    AWSCLI="awslocal"
+else
+    AWSCLI="aws --endpoint-url=${LOCALSTACK_ENDPOINT:-http://localhost.localstack.cloud:4566}"
+fi
+
+STACK_NAME="glue-msk-schema-registry"
+
+echo "=== Tearing down Glue MSK Schema Registry (CloudFormation) ==="
+
+$AWSCLI cloudformation delete-stack --stack-name "$STACK_NAME" 2>/dev/null || true
+$AWSCLI cloudformation wait stack-delete-complete --stack-name "$STACK_NAME" 2>/dev/null || true
+
+rm -f ../scripts/.env
+
+echo "Teardown complete!"
