@@ -1,0 +1,45 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: EMR Serverless Spark - Java Spark job on EMR Serverless
+
+Parameters:
+  AppName:
+    Type: String
+    Default: serverless-java-demo-cfn
+  BucketName:
+    Type: String
+    Default: emr-spark-cfn
+
+Resources:
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref BucketName
+
+  EMRRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: emr-serverless-role-cfn
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: emr-serverless.amazonaws.com
+            Action: sts:AssumeRole
+
+  EMRApplication:
+    Type: AWS::EMRServerless::Application
+    Properties:
+      Name: !Ref AppName
+      ReleaseLabel: emr-6.9.0
+      Type: SPARK
+
+Outputs:
+  AppName:
+    Value: !Ref AppName
+  AppId:
+    Value: !Ref EMRApplication
+  S3Bucket:
+    Value: !Ref BucketName
+  JobRoleArn:
+    Value: !GetAtt EMRRole.Arn

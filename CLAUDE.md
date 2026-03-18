@@ -84,6 +84,7 @@ samples/<sample-name>/<language>/
 | appsync-graphql-api | python | scripts, terraform, cloudformation, cdk | 52 |
 | glue-redshift-crawler | python | scripts, terraform, cloudformation, cdk | 40 |
 | glue-msk-schema-registry | python | scripts, terraform, cloudformation, cdk | 48 |
+| emr-serverless-spark | java | scripts, terraform, cloudformation, cdk | 40 |
 
 ## What "Porting a Sample" Means
 

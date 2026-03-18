@@ -40,14 +40,15 @@ Each sample must include:
 | appsync-graphql-api | python | 13×4=52 | AppSync + DynamoDB + RDS Aurora (1 DDB Scan gap) |
 | glue-redshift-crawler | python | 10×4=40 | Redshift + Glue Crawler (terraform deploy fails: connection ID format) |
 | glue-msk-schema-registry | python | 12×4=48 | MSK + Glue Schema Registry + AVRO schema evolution |
+| emr-serverless-spark | java | 10×4=40 | EMR Serverless + Java Spark (TF/CFN/CDK fail: LocalStack gaps) |
 | rds-failover-test | python | 7×4=28 | Aurora global cluster failover |
 | stepfunctions-lambda | python | 10×4=40 | Step Functions |
 | transfer-ftp-s3 | python | 7×4=28 | AWS Transfer FTP |
 | web-app-dynamodb | python | 8×4=32 | DynamoDB + Lambda |
 | web-app-rds | python | 7×4=28 | RDS PostgreSQL + Lambda |
 
-**Total: 32 samples × 4 IaC methods = 128 deployment configurations**
-**Total tests: ~1034 pytest tests**
+**Total: 33 samples × 4 IaC methods = 132 deployment configurations**
+**Total tests: ~1074 pytest tests**
 
 ## Partial IaC Methods
 
@@ -77,7 +78,7 @@ Each sample must include:
 - [x] `glue-msk-schema-registry` - Glue + MSK — all 4 IaC methods (48 tests)
 - [x] `glue-redshift-crawler` - Glue + Redshift — all 4 IaC methods (terraform deploy fails: Glue connection ID format gap)
 - [ ] `emr-serverless-sample` - EMR Serverless
-- [ ] `emr-serverless-spark` - EMR Spark
+- [x] `emr-serverless-spark` - EMR Spark — all 4 IaC methods (scripts passes, TF/CFN/CDK have LocalStack gaps)
 - [ ] `emr-serverless-python-dependencies` - EMR Python
 - [ ] `sagemaker-inference` - SageMaker inference
 - [ ] `reproducible-ml` - ML reproducibility

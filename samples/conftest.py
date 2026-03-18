@@ -183,6 +183,10 @@ class AWSClients:
     def kafka_client(self):
         return self._client("kafka")
 
+    @property
+    def emr_serverless_client(self):
+        return self._client("emr-serverless")
+
 
 @pytest.fixture(scope="session")
 def aws_clients() -> AWSClients:
