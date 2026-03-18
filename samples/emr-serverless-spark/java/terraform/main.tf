@@ -35,11 +35,11 @@ resource "aws_s3_bucket" "emr_bucket" {
   force_destroy = true
 }
 
-# Upload JAR
+# Upload JAR (use pre-built JAR from sample root)
 resource "aws_s3_object" "job_jar" {
   bucket = aws_s3_bucket.emr_bucket.id
   key    = "code/java-spark/java-demo-1.0.jar"
-  source = "${path.module}/../hello-world/target/java-demo-1.0.jar"
+  source = "${path.module}/../java-demo-1.0.jar"
 }
 
 # IAM role for EMR Serverless

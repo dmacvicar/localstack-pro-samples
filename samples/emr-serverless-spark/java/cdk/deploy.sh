@@ -20,16 +20,20 @@ JAR_S3_KEY="code/java-spark/java-demo-1.0.jar"
 
 echo "=== Deploying EMR Serverless Spark (CDK) ==="
 
-# Build JAR if needed
+# Find or build JAR
 JAR_PATH="$SAMPLE_DIR/hello-world/target/java-demo-1.0.jar"
+if [ ! -f "$JAR_PATH" ]; then
+    JAR_PATH="$SAMPLE_DIR/java-demo-1.0.jar"
+fi
 if [ ! -f "$JAR_PATH" ]; then
     if command -v mvn &> /dev/null; then
         echo "Building JAR with Maven..."
         cd "$SAMPLE_DIR/hello-world"
         mvn package -q -DskipTests
+        JAR_PATH="$SAMPLE_DIR/hello-world/target/java-demo-1.0.jar"
         cd "$SCRIPT_DIR"
     else
-        echo "Maven not found and no pre-built JAR at $JAR_PATH"
+        echo "No JAR found and Maven not available"
         exit 1
     fi
 fi
