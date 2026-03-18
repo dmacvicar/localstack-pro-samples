@@ -86,6 +86,7 @@ samples/<sample-name>/<language>/
 | glue-msk-schema-registry | python | scripts, terraform, cloudformation, cdk | 48 |
 | emr-serverless-spark | java | scripts, terraform, cloudformation, cdk | 40 |
 | reproducible-ml | python | scripts, terraform, cloudformation, cdk | 40 |
+| sagemaker-inference | python | scripts, terraform, cloudformation, cdk | 40 |
 
 ## What "Porting a Sample" Means
 

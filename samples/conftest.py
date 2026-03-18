@@ -187,6 +187,14 @@ class AWSClients:
     def emr_serverless_client(self):
         return self._client("emr-serverless")
 
+    @property
+    def sagemaker_client(self):
+        return self._client("sagemaker")
+
+    @property
+    def sagemaker_runtime_client(self):
+        return self._client("sagemaker-runtime")
+
 
 @pytest.fixture(scope="session")
 def aws_clients() -> AWSClients:

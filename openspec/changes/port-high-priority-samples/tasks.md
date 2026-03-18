@@ -42,14 +42,15 @@ Each sample must include:
 | glue-msk-schema-registry | python | 12×4=48 | MSK + Glue Schema Registry + AVRO schema evolution |
 | emr-serverless-spark | java | 10×4=40 | EMR Serverless + Java Spark (TF/CFN/CDK fail: LocalStack gaps) |
 | reproducible-ml | python | 10×4=40 | scikit-learn SVM on Lambda with sklearn layer |
+| sagemaker-inference | python | 10×4=40 | SageMaker PyTorch endpoint (needs ECR auth for Docker image) |
 | rds-failover-test | python | 7×4=28 | Aurora global cluster failover |
 | stepfunctions-lambda | python | 10×4=40 | Step Functions |
 | transfer-ftp-s3 | python | 7×4=28 | AWS Transfer FTP |
 | web-app-dynamodb | python | 8×4=32 | DynamoDB + Lambda |
 | web-app-rds | python | 7×4=28 | RDS PostgreSQL + Lambda |
 
-**Total: 34 samples × 4 IaC methods = 136 deployment configurations**
-**Total tests: ~1114 pytest tests**
+**Total: 35 samples × 4 IaC methods = 140 deployment configurations**
+**Total tests: ~1154 pytest tests**
 
 ## Partial IaC Methods
 
@@ -81,7 +82,7 @@ Each sample must include:
 - [ ] `emr-serverless-sample` - EMR Serverless
 - [x] `emr-serverless-spark` - EMR Spark — all 4 IaC methods (scripts passes, TF/CFN/CDK have LocalStack gaps)
 - [ ] `emr-serverless-python-dependencies` - EMR Python
-- [ ] `sagemaker-inference` - SageMaker inference
+- [x] `sagemaker-inference` - SageMaker inference — all 4 IaC methods (endpoint needs ECR-authed PyTorch image)
 - [x] `reproducible-ml` - ML reproducibility — all 4 IaC methods (40/40 tests pass)
 
 ### Debugging/tooling samples (different purpose)

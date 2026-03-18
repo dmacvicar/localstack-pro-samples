@@ -1,0 +1,74 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: SageMaker Inference - PyTorch model endpoint
+
+Parameters:
+  BucketName:
+    Type: String
+    Default: sagemaker-models-cfn
+  ModelName:
+    Type: String
+    Default: sample-cfn
+  ConfigName:
+    Type: String
+    Default: sample-cf-cfn
+  EndpointName:
+    Type: String
+    Default: sample-ep-cfn
+
+Resources:
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref BucketName
+
+  SageMakerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: sagemaker-role-cfn
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: sagemaker.amazonaws.com
+            Action: sts:AssumeRole
+
+  SageMakerModel:
+    Type: AWS::SageMaker::Model
+    Properties:
+      ModelName: !Ref ModelName
+      ExecutionRoleArn: !GetAtt SageMakerRole.Arn
+      PrimaryContainer:
+        Image: 763104351884.dkr.ecr.us-east-1.amazonaws.com/pytorch-inference:1.5.0-cpu-py3
+        ModelDataUrl: !Sub s3://${BucketName}/model.tar.gz
+    DependsOn: S3Bucket
+
+  EndpointConfig:
+    Type: AWS::SageMaker::EndpointConfig
+    Properties:
+      EndpointConfigName: !Ref ConfigName
+      ProductionVariants:
+        - VariantName: var-1
+          ModelName: !Ref ModelName
+          InitialInstanceCount: 1
+          InstanceType: ml.m5.large
+    DependsOn: SageMakerModel
+
+  Endpoint:
+    Type: AWS::SageMaker::Endpoint
+    Properties:
+      EndpointName: !Ref EndpointName
+      EndpointConfigName: !Ref ConfigName
+    DependsOn: EndpointConfig
+
+Outputs:
+  S3Bucket:
+    Value: !Ref BucketName
+  ModelName:
+    Value: !Ref ModelName
+  ConfigName:
+    Value: !Ref ConfigName
+  EndpointName:
+    Value: !Ref EndpointName
+  RoleArn:
+    Value: !GetAtt SageMakerRole.Arn
