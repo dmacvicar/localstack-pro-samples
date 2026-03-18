@@ -1,0 +1,75 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Reproducible ML - Train and predict with scikit-learn on Lambda
+
+Parameters:
+  BucketName:
+    Type: String
+    Default: reproducible-ml-cfn
+  TrainFunctionName:
+    Type: String
+    Default: ml-train-cfn
+  PredictFunctionName:
+    Type: String
+    Default: ml-predict-cfn
+
+Resources:
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref BucketName
+
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: ml-lambda-role-cfn
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+
+  TrainFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Ref TrainFunctionName
+      Runtime: python3.8
+      Handler: train.handler
+      Role: !GetAtt LambdaRole.Arn
+      Timeout: 600
+      Code:
+        S3Bucket: !Ref BucketName
+        S3Key: ml-train.zip
+      Layers:
+        - arn:aws:lambda:us-east-1:446751924810:layer:python-3-8-scikit-learn-0-22-0:3
+      Environment:
+        Variables:
+          S3_BUCKET: !Ref BucketName
+    DependsOn: S3Bucket
+
+  PredictFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Ref PredictFunctionName
+      Runtime: python3.8
+      Handler: infer.handler
+      Role: !GetAtt LambdaRole.Arn
+      Timeout: 600
+      Code:
+        S3Bucket: !Ref BucketName
+        S3Key: ml-infer.zip
+      Layers:
+        - arn:aws:lambda:us-east-1:446751924810:layer:python-3-8-scikit-learn-0-22-0:3
+      Environment:
+        Variables:
+          S3_BUCKET: !Ref BucketName
+    DependsOn: S3Bucket
+
+Outputs:
+  S3Bucket:
+    Value: !Ref BucketName
+  TrainFunction:
+    Value: !Ref TrainFunctionName
+  PredictFunction:
+    Value: !Ref PredictFunctionName

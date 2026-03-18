@@ -85,6 +85,7 @@ samples/<sample-name>/<language>/
 | glue-redshift-crawler | python | scripts, terraform, cloudformation, cdk | 40 |
 | glue-msk-schema-registry | python | scripts, terraform, cloudformation, cdk | 48 |
 | emr-serverless-spark | java | scripts, terraform, cloudformation, cdk | 40 |
+| reproducible-ml | python | scripts, terraform, cloudformation, cdk | 40 |
 
 ## What "Porting a Sample" Means
 

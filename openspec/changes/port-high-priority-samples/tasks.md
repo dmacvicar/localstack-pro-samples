@@ -41,14 +41,15 @@ Each sample must include:
 | glue-redshift-crawler | python | 10×4=40 | Redshift + Glue Crawler (terraform deploy fails: connection ID format) |
 | glue-msk-schema-registry | python | 12×4=48 | MSK + Glue Schema Registry + AVRO schema evolution |
 | emr-serverless-spark | java | 10×4=40 | EMR Serverless + Java Spark (TF/CFN/CDK fail: LocalStack gaps) |
+| reproducible-ml | python | 10×4=40 | scikit-learn SVM on Lambda with sklearn layer |
 | rds-failover-test | python | 7×4=28 | Aurora global cluster failover |
 | stepfunctions-lambda | python | 10×4=40 | Step Functions |
 | transfer-ftp-s3 | python | 7×4=28 | AWS Transfer FTP |
 | web-app-dynamodb | python | 8×4=32 | DynamoDB + Lambda |
 | web-app-rds | python | 7×4=28 | RDS PostgreSQL + Lambda |
 
-**Total: 33 samples × 4 IaC methods = 132 deployment configurations**
-**Total tests: ~1074 pytest tests**
+**Total: 34 samples × 4 IaC methods = 136 deployment configurations**
+**Total tests: ~1114 pytest tests**
 
 ## Partial IaC Methods
 
@@ -81,7 +82,7 @@ Each sample must include:
 - [x] `emr-serverless-spark` - EMR Spark — all 4 IaC methods (scripts passes, TF/CFN/CDK have LocalStack gaps)
 - [ ] `emr-serverless-python-dependencies` - EMR Python
 - [ ] `sagemaker-inference` - SageMaker inference
-- [ ] `reproducible-ml` - ML reproducibility
+- [x] `reproducible-ml` - ML reproducibility — all 4 IaC methods (40/40 tests pass)
 
 ### Debugging/tooling samples (different purpose)
 - [ ] `lambda-debugging-sam-java` - SAM debugging (Java)
